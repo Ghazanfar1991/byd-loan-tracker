@@ -1,0 +1,362 @@
+{
+  "projectId": "6ab0d3cf00379308f210",
+  "endpoint": "https://syd.cloud.appwrite.io/v1",
+  "tablesDB": [
+    {
+      "$id": "carloan",
+      "name": "BYD Sealion 8",
+      "enabled": true
+    }
+  ],
+  "tables": [
+    {
+      "$id": "settings",
+      "$permissions": [
+        "create(\"team:6ab0d5ee00084d9ebb6b/owner\")"
+      ],
+      "databaseId": "carloan",
+      "name": "Loan Settings",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "vehicle",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "funded_cents",
+          "type": "integer",
+          "required": true,
+          "array": false
+        },
+        {
+          "key": "regular_dd_cents",
+          "type": "integer",
+          "required": true,
+          "array": false
+        },
+        {
+          "key": "initial_dd_date",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "initial_dd_cents",
+          "type": "integer",
+          "required": true,
+          "array": false
+        },
+        {
+          "key": "regular_dd_start",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "extra_cents",
+          "type": "integer",
+          "required": true,
+          "array": false
+        },
+        {
+          "key": "extra_start",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "friend_cents",
+          "type": "integer",
+          "required": true,
+          "array": false
+        },
+        {
+          "key": "friend_start",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "cadence_days",
+          "type": "integer",
+          "required": true,
+          "array": false
+        },
+        {
+          "key": "timezone",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "team_id",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "owner_user_id",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "updated_at",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "$id": "financier_payments",
+      "$permissions": [
+        "create(\"team:6ab0d5ee00084d9ebb6b/owner\")"
+      ],
+      "databaseId": "carloan",
+      "name": "Financier Payments",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "cycle_key",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "due_date",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "type",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "amount_cents",
+          "type": "integer",
+          "required": true,
+          "array": false
+        },
+        {
+          "key": "status",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "payment_method",
+          "type": "varchar",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "paid_date",
+          "type": "varchar",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "paid_by",
+          "type": "varchar",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "notes",
+          "type": "varchar",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "created_at",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "updated_at",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        }
+      ],
+      "indexes": [
+        {
+          "type": "unique",
+          "columns": [
+            "cycle_key"
+          ],
+          "key": "financier_cycle_unique",
+          "orders": [
+            "ASC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "friend_payments",
+      "$permissions": [
+        "create(\"team:6ab0d5ee00084d9ebb6b\")"
+      ],
+      "databaseId": "carloan",
+      "name": "Friend Payments",
+      "enabled": true,
+      "rowSecurity": true,
+      "columns": [
+        {
+          "key": "cycle_key",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "due_date",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "type",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "amount_cents",
+          "type": "integer",
+          "required": true,
+          "array": false
+        },
+        {
+          "key": "status",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "payment_method",
+          "type": "varchar",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "paid_date",
+          "type": "varchar",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "paid_by",
+          "type": "varchar",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "proof_file_id",
+          "type": "varchar",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "reference",
+          "type": "varchar",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "notes",
+          "type": "varchar",
+          "required": false,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "created_at",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        },
+        {
+          "key": "updated_at",
+          "type": "varchar",
+          "required": true,
+          "array": false,
+          "size": 255
+        }
+      ],
+      "indexes": [
+        {
+          "type": "unique",
+          "columns": [
+            "cycle_key"
+          ],
+          "key": "friend_cycle_unique",
+          "orders": [
+            "ASC"
+          ]
+        }
+      ]
+    }
+  ],
+  "buckets": [
+    {
+      "$id": "payment-receipts",
+      "$permissions": [
+        "create(\"team:6ab0d5ee00084d9ebb6b\")",
+        "read(\"team:6ab0d5ee00084d9ebb6b\")"
+      ],
+      "fileSecurity": true,
+      "name": "Payment Receipts",
+      "enabled": true,
+      "maximumFileSize": 10485760,
+      "allowedFileExtensions": [
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
+        "pdf"
+      ],
+      "compression": "none",
+      "encryption": true,
+      "antivirus": true
+    }
+  ]
+}

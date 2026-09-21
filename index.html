@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0f14" />
+  <title>BYD Loan Tracker</title>
+
+  <!-- Appwrite Web SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@21.2.1"></script>
+
+  <style>
+    :root{
+      --bg:#080b10;
+      --panel:#0f141b;
+      --panel-2:#131a23;
+      --border:#222b36;
+      --text:#f5f7fa;
+      --muted:#8e9aaa;
+      --green:#48d597;
+      --amber:#f6c65b;
+      --red:#ff6b7a;
+      --blue:#6ca8ff;
+      --shadow:0 20px 60px rgba(0,0,0,.28);
+      --radius:22px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+    body{min-height:100vh}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .hidden{display:none!important}
+    .app-shell{max-width:1400px;margin:0 auto;padding:28px 22px 60px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .brand-mark{width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#1b242f,#0c1016);border:1px solid #2d3946;display:grid;place-items:center;box-shadow:var(--shadow)}
+    .brand-mark span{font-weight:800;font-size:17px;letter-spacing:.8px}
+    .brand h1{font-size:20px;margin:0 0 3px}
+    .brand p{font-size:12px;color:var(--muted);margin:0}
+    .user-box{display:flex;align-items:center;gap:10px}
+    .user-name{font-size:13px;color:#dbe2ea}
+    .ghost-btn,.primary-btn,.danger-btn,.small-btn{
+      border:1px solid var(--border);border-radius:12px;background:var(--panel-2);color:var(--text);
+      padding:10px 13px;transition:.18s ease
+    }
+    .ghost-btn:hover,.small-btn:hover{border-color:#394655;transform:translateY(-1px)}
+    .primary-btn{background:#eef4f8;color:#071017;border-color:#eef4f8;font-weight:700}
+    .primary-btn:hover{transform:translateY(-1px);background:#fff}
+    .danger-btn{background:rgba(255,107,122,.08);color:#ffdbe0;border-color:rgba(255,107,122,.25)}
+    .small-btn{padding:8px 11px;font-size:12px}
+    .grid{display:grid;gap:16px}
+    .cards-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .cards-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .panel{background:linear-gradient(180deg,rgba(17,22,29,.96),rgba(11,15,21,.96));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .metric{padding:20px;min-height:145px;position:relative;overflow:hidden}
+    .metric .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.13em}
+    .metric .value{font-size:31px;font-weight:750;letter-spacing:-.03em;margin-top:14px}
+    .metric .sub{font-size:12px;color:var(--muted);margin-top:8px}
+    .metric .glow{position:absolute;right:-45px;bottom:-45px;width:130px;height:130px;border-radius:50%;background:rgba(108,168,255,.06);filter:blur(4px)}
+    .hero{padding:20px;display:flex;align-items:stretch;gap:16px;margin-bottom:16px}
+    .hero-main{flex:1;min-width:0}
+    .hero-title{display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .hero-title h2{margin:0;font-size:31px;letter-spacing:-.04em}
+    .hero-title .pill{font-size:11px;border:1px solid #2a3542;border-radius:999px;padding:7px 10px;color:#cdd7e0;background:#111821}
+    .hero-meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:9px;color:var(--muted);font-size:12px}
+    .hero-action{width:320px;background:linear-gradient(180deg,#121a22,#0c1219);border:1px solid #2b3947;border-radius:18px;padding:17px}
+    .hero-action .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--amber)}
+    .hero-action .amount{font-size:31px;font-weight:800;margin-top:7px}
+    .hero-action .due{font-size:12px;color:#b7c0ca;margin-top:3px}
+    .hero-action .row{display:flex;gap:8px;margin-top:15px}
+    .section{margin-top:18px}
+    .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+    .section-head h3{margin:0;font-size:17px}
+    .section-head p{margin:0;color:var(--muted);font-size:12px}
+    .timeline{padding:0}
+    .event{display:grid;grid-template-columns:90px minmax(0,1fr) 180px 135px;gap:14px;align-items:center;padding:15px 18px;border-bottom:1px solid rgba(255,255,255,.05)}
+    .event:last-child{border-bottom:0}
+    .date-col{font-size:13px;font-weight:700}
+    .date-col span{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-top:3px}
+    .event-title{font-weight:650;font-size:14px}
+    .event-desc{font-size:11px;color:var(--muted);margin-top:4px}
+    .event-amount{text-align:right;font-weight:750}
+    .event-amount small{display:block;color:var(--muted);font-size:10px;font-weight:500;margin-top:3px}
+    .badge{justify-self:end;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:7px 9px;border-radius:999px;border:1px solid transparent}
+    .badge.green{color:#bff7df;background:rgba(72,213,151,.08);border-color:rgba(72,213,151,.22)}
+    .badge.amber{color:#ffe3a1;background:rgba(246,198,91,.08);border-color:rgba(246,198,91,.2)}
+    .badge.red{color:#ffd0d6;background:rgba(255,107,122,.08);border-color:rgba(255,107,122,.22)}
+    .badge.blue{color:#cfe1ff;background:rgba(108,168,255,.08);border-color:rgba(108,168,255,.22)}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:760px}
+    th,td{padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.05);text-align:left;font-size:12px}
+    th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+    td.amount{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+    td.right{text-align:right}
+    .empty{padding:34px 20px;text-align:center;color:var(--muted);font-size:13px}
+    .settings{padding:20px}
+    .settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .field{display:flex;flex-direction:column;gap:7px}
+    .field.full{grid-column:1/-1}
+    .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+    .field input,.field select,.field textarea{
+      width:100%;background:#0b1016;color:var(--text);border:1px solid #27313d;border-radius:12px;padding:11px 12px;outline:none
+    }
+    .field textarea{min-height:82px;resize:vertical}
+    .field input:focus,.field select:focus,.field textarea:focus{border-color:#5f7186;box-shadow:0 0 0 3px rgba(108,168,255,.08)}
+    .settings-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+    .auth-screen{min-height:100vh;display:grid;place-items:center;padding:22px}
+    .auth-card{width:min(460px,100%);padding:26px;border-radius:26px}
+    .auth-card h1{margin:0;font-size:28px;letter-spacing:-.04em}
+    .auth-card p{color:var(--muted);font-size:13px;line-height:1.55}
+    .auth-tabs{display:flex;gap:6px;background:#0b1016;border:1px solid #222b36;padding:5px;border-radius:14px;margin:20px 0}
+    .auth-tab{flex:1;background:transparent;border:0;color:var(--muted);padding:10px;border-radius:10px}
+    .auth-tab.active{background:#18212b;color:#fff}
+    .stack{display:grid;gap:10px}
+    .msg{font-size:12px;padding:10px 12px;border-radius:12px;border:1px solid #27313d;background:#0c1218;color:#cbd5df}
+    .msg.error{border-color:rgba(255,107,122,.28);color:#ffd8dd;background:rgba(255,107,122,.06)}
+    .msg.success{border-color:rgba(72,213,151,.24);color:#caffdf;background:rgba(72,213,151,.05)}
+    .config-note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:12px}
+    .file-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:8px 9px;border:1px solid #25303c;background:#0c1117;border-radius:10px}
+    .file-name{font-size:11px;color:#c9d2dc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .link-btn{border:0;background:transparent;color:#a7c7ff;padding:0;font-size:11px}
+    .member-pill{font-size:11px;color:#cbd5df}
+    .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);display:grid;place-items:center;padding:18px;z-index:50}
+    .modal{width:min(640px,100%);max-height:90vh;overflow:auto;padding:20px}
+    .modal h3{margin:0;font-size:19px}
+    .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .icon-btn{width:36px;height:36px;border:1px solid #2a3440;border-radius:10px;background:#111820;color:#fff}
+    .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+    .modal-grid .full{grid-column:1/-1}
+    .receipt-preview{max-width:100%;border-radius:14px;border:1px solid #26313d;background:#091016;margin-top:8px}
+    .footer-note{margin-top:18px;color:#687686;font-size:10px;text-align:center}
+
+    /* ---------- Navigation / tabs ---------- */
+    .tabs{display:flex;gap:7px;align-items:center;padding:6px;background:#0d131a;border:1px solid var(--border);border-radius:15px;margin:18px 0 6px;overflow:auto}
+    .tab-btn{border:0;background:transparent;color:var(--muted);padding:10px 15px;border-radius:10px;font-size:12px;font-weight:700;white-space:nowrap}
+    .tab-btn:hover{color:#fff;background:#151d27}
+    .tab-btn.active{background:#edf3f7;color:#071017}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+    .tab-lock{color:#657385;font-size:11px;margin-left:auto;padding:0 10px;white-space:nowrap}
+
+    /* ---------- Clear event actions ---------- */
+    .event{grid-template-columns:90px minmax(0,1fr) 150px 105px 115px}
+    .event-actions{display:flex;justify-content:flex-end;align-items:center;gap:7px}
+    .event-actions .small-btn{min-width:104px;text-align:center}
+    .event-amount{white-space:nowrap}
+
+    /* ---------- Metric note ---------- */
+    .metric .sub.note{max-width:230px;line-height:1.45}
+
+    /* ---------- History actions ---------- */
+    .history-table th:last-child,.history-table td:last-child{text-align:right}
+    .history-actions{display:flex;justify-content:flex-end;gap:7px;align-items:center}
+    .history-actions .small-btn{min-width:72px}
+
+    /* ---------- Confirmation modal ---------- */
+    .confirm-copy{color:#cbd4dd;font-size:13px;line-height:1.55;margin-top:12px;white-space:pre-line}
+    .confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+
+    /* ---------- Better modal field behaviour ---------- */
+    .field input[type="file"]{padding:9px}
+    .field input[type="file"]::file-selector-button{border:1px solid #2b3643;border-radius:9px;background:#151d26;color:#e7edf2;padding:7px 9px;margin-right:8px;cursor:pointer}
+
+    /* ---------- Compact mobile history ---------- */
+    @media (max-width:760px){
+      .tabs{margin-top:14px;position:sticky;top:8px;z-index:20;box-shadow:0 10px 30px rgba(0,0,0,.22)}
+      .tab-lock{display:none}
+      .event{grid-template-columns:1fr;gap:8px;padding:16px}
+      .event-amount{white-space:normal;text-align:left}
+      .event-actions{justify-content:flex-start;flex-wrap:wrap}
+      .event-actions .small-btn{min-width:0}
+      .history-table{min-width:0;width:100%}
+      .history-table thead{display:none}
+      .history-table,.history-table tbody,.history-table tr,.history-table td{display:block}
+      .history-table tr{
+        padding:14px;
+        border-bottom:1px solid rgba(255,255,255,.06);
+      }
+      .history-table td{
+        border:0;
+        padding:5px 0;
+        display:grid;
+        grid-template-columns:105px minmax(0,1fr);
+        gap:10px;
+        text-align:left !important;
+        font-size:12px;
+      }
+      .history-table td::before{
+        content:attr(data-label);
+        color:var(--muted);
+        font-size:10px;
+        text-transform:uppercase;
+        letter-spacing:.08em;
+        font-weight:700;
+      }
+      .history-table td.amount{font-size:15px}
+      .history-actions{justify-content:flex-start}
+      .history-actions .small-btn{min-width:0}
+    }
+
+    @media (max-width:1100px){
+      .cards-4{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .hero-action{width:290px}
+      .event{grid-template-columns:80px minmax(0,1fr) 140px 110px}
+      .settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+    @media (max-width:760px){
+      .app-shell{padding:18px 12px 40px}
+      .topbar{align-items:flex-start}
+      .user-name{display:none}
+      .cards-4,.cards-3{grid-template-columns:1fr}
+      .hero{flex-direction:column}
+      .hero-action{width:100%}
+      .hero-title h2{font-size:25px}
+      .event{grid-template-columns:1fr;gap:7px}
+      .event-amount{text-align:left}
+      .badge{justify-self:start}
+      .settings-grid,.modal-grid{grid-template-columns:1fr}
+      .field.full,.modal-grid .full{grid-column:auto}
+    }
+  </style>
+</head>
+
+<body>
+  <!-- AUTH -->
+  <div id="authScreen" class="auth-screen">
+    <div class="panel auth-card">
+      <div class="brand">
+        <div class="brand-mark"><span>BYD</span></div>
+        <div>
+          <h1>BYD Loan Tracker</h1>
+          <p>Shared loan + payment ledger</p>
+        </div>
+      </div>
+
+      <div class="auth-tabs">
+        <button id="loginTab" class="auth-tab active">Sign in</button>
+        <button id="signupTab" class="auth-tab">Create account</button>
+      </div>
+
+      <form id="authForm" class="stack">
+        <div class="field" id="nameField" style="display:none">
+          <label>Name</label>
+          <input id="authName" type="text" autocomplete="name" placeholder="Your name" />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input id="authEmail" type="email" autocomplete="email" required placeholder="you@example.com" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="authPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="Minimum 8 characters" />
+        </div>
+        <button id="authSubmit" class="primary-btn" type="submit">Sign in</button>
+        <div id="authMsg" class="msg hidden"></div>
+      </form>
+
+      <div class="config-note">
+        Your Appwrite credentials are configured in the HTML's CONFIG section. No API key is used in the browser.
+      </div>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div id="appScreen" class="hidden">
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark"><span>BYD</span></div>
+          <div>
+            <h1>BYD Loan Tracker</h1>
+            <p id="headerSubtitle">Shared payment dashboard</p>
+          </div>
+        </div>
+        <div class="user-box">
+          <div id="userName" class="user-name"></div>
+          <button id="refreshBtn" class="ghost-btn">Refresh</button>
+          <button id="logoutBtn" class="ghost-btn">Sign out</button>
+        </div>
+      </header>
+
+      <section id="initErrorPanel" class="panel settings hidden">
+        <div class="section-head">
+          <div>
+            <h3>App initialization failed</h3>
+            <p id="initErrorStep">The application could not finish loading.</p>
+          </div>
+          <button id="retryInitBtn" class="primary-btn">Retry</button>
+        </div>
+        <div id="initErrorText" class="msg error" style="white-space:pre-wrap"></div>
+        <div class="config-note" style="margin-top:10px">
+          This panel is deliberately visible instead of leaving a blank dashboard. It reports the exact Appwrite step that failed.
+        </div>
+      </section>
+
+      <section id="setupPanel" class="panel settings hidden">
+        <div class="section-head">
+          <div>
+            <h3>Initial loan setup</h3>
+            <p>Owner only. This creates the shared configuration and payment schedule.</p>
+          </div>
+        </div>
+        <form id="setupForm">
+          <div class="settings-grid">
+            <div class="field">
+              <label>Vehicle</label>
+              <input id="sVehicle" value="BYD" required />
+            </div>
+            <div class="field">
+              <label>Funded amount</label>
+              <input id="sFunded" type="number" step="0.01" value="46066.00" required />
+            </div>
+            <div class="field">
+              <label>Fortnight cadence</label>
+              <input id="sCadence" type="number" min="1" value="14" required />
+            </div>
+
+            <div class="field">
+              <label>Initial DD date</label>
+              <input id="sInitialDate" type="date" value="2026-09-03" required />
+            </div>
+            <div class="field">
+              <label>Initial DD amount</label>
+              <input id="sInitialAmount" type="number" step="0.01" value="1017.36" required />
+            </div>
+            <div class="field">
+              <label>Regular DD start</label>
+              <input id="sRegularStart" type="date" value="2026-09-17" required />
+            </div>
+
+            <div class="field">
+              <label>Regular DD amount</label>
+              <input id="sRegularAmount" type="number" step="0.01" value="678.20" required />
+            </div>
+            <div class="field">
+              <label>Extra payment start</label>
+              <input id="sExtraStart" type="date" value="2026-09-17" required />
+            </div>
+            <div class="field">
+              <label>Extra payment amount</label>
+              <input id="sExtraAmount" type="number" step="0.01" value="122.00" required />
+            </div>
+
+            <div class="field">
+              <label>Friend first payment due</label>
+              <input id="sFriendStart" type="date" value="2026-09-17" required />
+            </div>
+            <div class="field">
+              <label>Friend payment amount</label>
+              <input id="sFriendAmount" type="number" step="0.01" value="800.00" required />
+            </div>
+            <div class="field">
+              <label>Timezone</label>
+              <input id="sTimezone" value="Australia/Sydney" required />
+            </div>
+          </div>
+          <div class="settings-actions">
+            <button class="primary-btn" type="submit">Create / update loan</button>
+          </div>
+          <div class="config-note">
+            The extra payment start date is set to 17 Sep 2026 by default. Change it here if your first manual $122 payment should start on 1 Oct 2026.
+            The friend first-payment date is also configurable.
+          </div>
+        </form>
+      </section>
+
+      <main id="dashboard" class="hidden">
+        <section class="panel hero">
+          <div class="hero-main">
+            <div class="hero-title">
+              <h2 id="vehicleTitle">BYD</h2>
+              <div id="rolePill" class="pill">Member</div>
+            </div>
+            <div class="hero-meta">
+              <div><strong id="fundedMeta">$0.00</strong> funded</div>
+              <div>Shared team <strong id="teamMeta">—</strong></div>
+              <div><span class="status-dot"></span>Realtime enabled</div>
+            </div>
+          </div>
+          <div class="hero-action">
+            <div class="eyebrow">Next manual action</div>
+            <div id="nextActionAmount" class="amount">$0.00</div>
+            <div id="nextActionText" class="due">Loading…</div>
+            <div class="row">
+              <button id="nextActionBtn" class="primary-btn" style="flex:1">Log / review payment</button>
+            </div>
+          </div>
+        </section>
+
+        <nav class="tabs" aria-label="Dashboard sections">
+          <button class="tab-btn active" data-tab="overviewTab">Overview</button>
+          <button class="tab-btn" data-tab="historyTab">Payment History</button>
+          <button class="tab-btn" id="settingsTabBtn" data-tab="settingsTab">Loan Settings</button>
+          <span id="tabLock" class="tab-lock">Owner only</span>
+        </nav>
+
+        <section id="overviewTab" class="tab-panel active">
+          <section class="grid cards-4">
+            <div class="panel metric">
+              <div class="label">Paid to financier</div>
+              <div id="metricFinancier" class="value">$0.00</div>
+              <div class="sub">Initial + direct debit + extra payments</div>
+              <div class="glow"></div>
+            </div>
+            <div class="panel metric">
+              <div class="label">Tracked remaining</div>
+              <div id="metricRemaining" class="value">$0.00</div>
+              <div class="sub note">Funded amount minus tracked financier payments. Not the lender's official balance.</div>
+              <div class="glow"></div>
+            </div>
+            <div class="panel metric">
+              <div class="label">Extra paid</div>
+              <div id="metricExtra" class="value">$0.00</div>
+              <div class="sub">Manual additional payments</div>
+              <div class="glow"></div>
+            </div>
+            <div class="panel metric">
+              <div class="label">Received from friend</div>
+              <div id="metricFriend" class="value">$0.00</div>
+              <div class="sub">Recorded incoming payments</div>
+              <div class="glow"></div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <h3>Upcoming fortnightly schedule</h3>
+                <p id="scheduleSub">—</p>
+              </div>
+              <button id="syncScheduleBtn" class="small-btn">Sync schedule</button>
+            </div>
+            <div class="panel timeline" id="upcomingList"></div>
+          </section>
+        </section>
+
+        <section id="historyTab" class="tab-panel">
+          <section class="section">
+            <div class="section-head">
+              <div>
+                <h3>Payment history</h3>
+                <p>Shared records. Bank transfer screenshots are attached to the same payment row.</p>
+              </div>
+              <button id="logFriendBtn" class="small-btn">Log payment</button>
+            </div>
+            <div class="panel table-wrap">
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Method</th>
+                    <th>Paid by</th>
+                    <th>Status</th>
+                    <th>Amount</th>
+                    <th>Proof</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+
+        <section id="settingsTab" class="tab-panel">
+          <section class="section" id="settingsSection">
+            <div class="section-head">
+              <div>
+                <h3>Loan settings</h3>
+                <p>Changes affect future scheduled items. Existing payment history remains intact.</p>
+              </div>
+            </div>
+            <div id="settingsSummary" class="panel settings"></div>
+          </section>
+        </section>
+
+        <div id="runtimeMsg" class="msg hidden" style="margin-top:16px"></div>
+        <div class="footer-note">BYD Loan Tracker · Single-page frontend · Appwrite backend</div>
+      </main>
+    </div>
+  </div>
+
+  <!-- PAYMENT MODAL -->
+  <div id="paymentModal" class="modal-backdrop hidden">
+    <div class="panel modal">
+      <div class="modal-head">
+        <div>
+          <h3 id="paymentModalTitle">Log payment</h3>
+          <div id="paymentModalSubtitle" class="config-note"></div>
+        </div>
+        <button id="closePaymentModal" class="icon-btn">×</button>
+      </div>
+
+      <form id="paymentForm">
+        <div class="modal-grid">
+          <div class="field">
+            <label>Payment type</label>
+            <select id="pType">
+              <option value="friend_payment">Friend payment</option>
+              <option value="extra_payment">Extra payment</option>
+              <option value="direct_debit">Direct debit</option>
+              <option value="initial_direct_debit">Initial direct debit</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Amount</label>
+            <input id="pAmount" type="number" step="0.01" required />
+          </div>
+          <div class="field">
+            <label>Payment date</label>
+            <input id="pDate" type="date" required />
+          </div>
+          <div class="field">
+            <label>Payment method</label>
+            <select id="pMethod">
+              <option value="bank_transfer">Bank transfer</option>
+              <option value="cash">Cash</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>Reference (optional)</label>
+            <input id="pReference" placeholder="Bank reference / note" />
+          </div>
+          <div class="field full">
+            <label>Screenshot (bank transfer recommended)</label>
+            <input id="pScreenshot" type="file" accept="image/*,.pdf" />
+          </div>
+          <div class="field full">
+            <label>Notes</label>
+            <textarea id="pNotes" placeholder="Optional note"></textarea>
+          </div>
+        </div>
+        <div class="settings-actions">
+          <button type="button" id="cancelPaymentBtn" class="ghost-btn">Cancel</button>
+          <button type="submit" class="primary-btn">Save payment</button>
+        </div>
+        <div id="paymentMsg" class="msg hidden" style="margin-top:10px"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    /* =========================================================
+       CONFIGURATION
+       Only these values need Appwrite project information.
+       Never put an Appwrite API key here.
+       ========================================================= */
+    const CONFIG = {
+      endpoint: "https://syd.cloud.appwrite.io/v1",
+      projectId: "6ab0d3cf00379308f210",
+      projectName: "BYD Sealion 8",
+
+      // Keep these exact IDs when creating the Appwrite resources.
+      databaseId: "carloan",
+      settingsTableId: "settings",
+      financierTableId: "financier_payments",
+      friendTableId: "friend_payments",
+      storageBucketId: "payment-receipts",
+
+      // Team you create in Appwrite.
+      teamId: "6ab0d5ee00084d9ebb6b",
+
+      // Number of future days to materialize into the schedule.
+      scheduleDays: 365
+    };
+
+    // ---------- Appwrite setup ----------
+    const {
+      Client, Account, TablesDB, Storage, Teams, Query, ID, Permission, Role
+    } = Appwrite;
+
+    const client = new Client()
+      .setEndpoint(CONFIG.endpoint)
+      .setProject(CONFIG.projectId);
+
+    // Appwrite connectivity check: runs exactly once when this page starts.
+    // This does not require an authenticated user.
+    client.ping()
+      .then(() => console.info("Appwrite connection OK:", {
+        project: CONFIG.projectName,
+        projectId: CONFIG.projectId,
+        endpoint: CONFIG.endpoint
+      }))
+      .catch(err => console.error("Appwrite connection failed:", err));
+
+    const account = new Account(client);
+    const tablesDB = new TablesDB(client);
+    const storage = new Storage(client);
+    const teams = new Teams(client);
+
+    // ---------- State ----------
+    let currentUser = null;
+    let currentTeamMembers = [];
+    let ownerUserId = null;
+    let isOwner = false;
+    let settings = null;
+    let financierRows = [];
+    let friendRows = [];
+    let currentModalRow = null;
+    let unsubscribers = [];
+
+    // ---------- DOM helpers ----------
+    const $ = id => document.getElementById(id);
+    const show = el => el.classList.remove("hidden");
+    const hide = el => el.classList.add("hidden");
+
+    function setMsg(el, text, type="") {
+      el.textContent = text || "";
+      el.className = "msg" + (type ? " " + type : "") + (text ? "" : " hidden");
+      if (!text) hide(el);
+      else show(el);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function money(cents) {
+      return new Intl.NumberFormat("en-AU", {
+        style:"currency", currency:"AUD", minimumFractionDigits:2
+      }).format((Number(cents)||0)/100);
+    }
+
+    function toCents(amount) {
+      return Math.round(Number(amount) * 100);
+    }
+
+    function dateKeyFromDate(date) {
+      const y = date.getUTCFullYear();
+      const m = String(date.getUTCMonth()+1).padStart(2,"0");
+      const d = String(date.getUTCDate()).padStart(2,"0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function addDays(dateKey, days) {
+      const d = new Date(dateKey + "T00:00:00Z");
+      d.setUTCDate(d.getUTCDate() + days);
+      return dateKeyFromDate(d);
+    }
+
+    function compareDate(a,b){ return a < b ? -1 : a > b ? 1 : 0; }
+
+    function todayKey() {
+      const formatter = new Intl.DateTimeFormat("en-CA", {
+        timeZone:"Australia/Sydney", year:"numeric", month:"2-digit", day:"2-digit"
+      });
+      const parts = formatter.formatToParts(new Date());
+      const obj = Object.fromEntries(parts.map(p => [p.type,p.value]));
+      return `${obj.year}-${obj.month}-${obj.day}`;
+    }
+
+    function formatDate(dateKey, opts={}) {
+      if (!dateKey) return "—";
+      const d = new Date(dateKey + "T00:00:00Z");
+      return new Intl.DateTimeFormat("en-AU", {
+        day:"2-digit", month:"short", year:opts.year === false ? undefined:"numeric",
+        timeZone:"UTC"
+      }).format(d);
+    }
+
+    function dayLabel(dateKey) {
+      const d = new Date(dateKey + "T00:00:00Z");
+      return new Intl.DateTimeFormat("en-AU",{weekday:"short",timeZone:"UTC"}).format(d);
+    }
+
+    function isPastOrToday(dateKey) {
+      return compareDate(dateKey, todayKey()) <= 0;
+    }
+
+    function isDueToday(dateKey) {
+      return dateKey === todayKey();
+    }
+
+    function typeLabel(type) {
+      return {
+        initial_direct_debit:"Initial direct debit",
+        direct_debit:"Direct debit",
+        extra_payment:"Extra payment",
+        friend_payment:"Friend payment"
+      }[type] || type;
+    }
+
+    function statusForRow(row) {
+      if (row.status === "paid" || row.status === "auto_paid") return row.status;
+      if (row.type === "direct_debit" || row.type === "initial_direct_debit") {
+        // Direct debit is considered automatically completed on/after its scheduled date.
+        return isPastOrToday(row.due_date) ? "auto_paid" : "scheduled";
+      }
+      if (row.status === "skipped" || row.status === "missed") return row.status;
+      if (isPastOrToday(row.due_date)) return "overdue";
+      return "scheduled";
+    }
+
+    function statusBadge(status) {
+      const map = {
+        paid:["Paid","green"],
+        auto_paid:["Auto-paid","green"],
+        scheduled:["Scheduled","blue"],
+        overdue:["Overdue","red"],
+        due:["Due","amber"],
+        missed:["Missed","red"],
+        skipped:["Skipped","amber"]
+      };
+      const [label, cls] = map[status] || [status, "blue"];
+      return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
+    }
+
+    function methodLabel(method) {
+      return {
+        bank_transfer:"Bank transfer",
+        cash:"Cash",
+        direct_debit:"Direct debit"
+      }[method] || "—";
+    }
+
+    function findUserNameById(userId) {
+      const m = currentTeamMembers.find(x => x.userId === userId);
+      return m?.userName || (userId === currentUser?.$id ? currentUser?.name : "Member");
+    }
+
+    function allRows() {
+      return [...financierRows, ...friendRows].sort((a,b) =>
+        a.due_date.localeCompare(b.due_date) || a.type.localeCompare(b.type)
+      );
+    }
+
+    // ---------- Auth ----------
+    let authMode = "login";
+
+    $("loginTab").addEventListener("click", () => switchAuthMode("login"));
+    $("signupTab").addEventListener("click", () => switchAuthMode("signup"));
+
+    function switchAuthMode(mode) {
+      authMode = mode;
+      $("loginTab").classList.toggle("active", mode === "login");
+      $("signupTab").classList.toggle("active", mode === "signup");
+      $("nameField").style.display = mode === "signup" ? "flex" : "none";
+      $("authSubmit").textContent = mode === "signup" ? "Create account" : "Sign in";
+      setMsg($("authMsg"), "");
+    }
+
+    $("authForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      setMsg($("authMsg"), "");
+      const email = $("authEmail").value.trim();
+      const password = $("authPassword").value;
+      const name = $("authName").value.trim();
+
+      try {
+        $("authSubmit").disabled = true;
+        if (authMode === "signup") {
+          await account.create({
+            userId: ID.unique(),
+            email,
+            password,
+            name: name || email.split("@")[0]
+          });
+        }
+
+        try {
+          await account.createEmailPasswordSession({email, password});
+        } catch (loginErr) {
+          if (authMode === "signup") {
+            throw new Error("Account created. Please sign in using the new account.");
+          }
+          throw loginErr;
+        }
+
+        await bootApp();
+      } catch (err) {
+        setMsg($("authMsg"), readableError(err), "error");
+      } finally {
+        $("authSubmit").disabled = false;
+      }
+    });
+
+    $("logoutBtn").addEventListener("click", async () => {
+      try { await account.deleteSession({sessionId:"current"}); } catch {}
+      unsubscribers.forEach(fn => { try{fn()}catch{} });
+      unsubscribers = [];
+      location.reload();
+    });
+
+    $("retryInitBtn").addEventListener("click", async () => {
+      hide($("initErrorPanel"));
+      await bootApp();
+    });
+
+    async function bootApp() {
+      hide($("authScreen"));
+      show($("appScreen"));
+      hide($("initErrorPanel"));
+      try {
+        setInitStep("Loading signed-in user…");
+        await loadCurrentUser();
+
+        setInitStep("Checking BYD Loan team membership…");
+        await loadTeam();
+
+        setInitStep("Loading loan settings…");
+        await loadSettings();
+
+        if (settings) {
+          setInitStep("Loading payment records…");
+          await ensureSchedule({quiet:true});
+          await refreshAll();
+          subscribeRealtime();
+        }
+      } catch (err) {
+        console.error("BYD Loan Tracker initialization error:", err);
+        show($("initErrorPanel"));
+        $("initErrorStep").textContent = initStepText || "Initialization error";
+        $("initErrorText").textContent = formatInitError(err);
+      }
+    }
+
+    let initStepText = "Starting application…";
+    function setInitStep(text) {
+      initStepText = text;
+      const el = $("initErrorStep");
+      if (el) el.textContent = text;
+    }
+
+    function formatInitError(err) {
+      const code = err?.code ? `Appwrite code: ${err.code}\\n` : "";
+      const type = err?.type ? `Appwrite type: ${err.type}\\n` : "";
+      const msg = err?.message || err?.response?.message || String(err);
+      return `${code}${type}Message: ${msg}\\n\\nUser: ${currentUser?.email || "unknown"}\\nUser ID: ${currentUser?.$id || "unknown"}\\nTeam ID: ${CONFIG.teamId}\\nDatabase ID: ${CONFIG.databaseId}`;
+    }
+
+    async function loadCurrentUser() {
+      currentUser = await account.get();
+      $("userName").textContent = currentUser.name || currentUser.email;
+    }
+
+    async function loadTeam() {
+      if (!CONFIG.teamId || CONFIG.teamId.startsWith("YOUR_")) {
+        throw new Error("Set CONFIG.teamId in index.html first.");
+      }
+
+      // The client Teams.list() endpoint is specifically scoped to the
+      // currently authenticated user and returns only teams that user belongs to.
+      // Use it as the primary membership check.
+      const teamList = await teams.list();
+      const visibleTeams = teamList.teams || [];
+      const team = visibleTeams.find(t => t.$id === CONFIG.teamId);
+
+      if (!team) {
+        const visible = visibleTeams.length
+          ? visibleTeams.map(t => `${t.name} (${t.$id})`).join(", ")
+          : "None";
+        throw new Error(
+          `The signed-in Appwrite account is not a member of the configured team.\\n` +
+          `Current account: ${currentUser.email} (${currentUser.$id})\\n` +
+          `Teams visible to this account: ${visible}\\n` +
+          `Expected team: ${CONFIG.teamId}`
+        );
+      }
+
+      $("teamMeta").textContent = team.name || CONFIG.teamId.slice(0,8);
+
+      // Now retrieve the team's memberships so we can determine the member's role.
+      const membershipsResponse = await teams.listMemberships({
+        teamId: CONFIG.teamId
+      });
+      const memberships = membershipsResponse.memberships || [];
+      currentTeamMembers = memberships;
+
+      // Usually userId is an exact match. Keep an email fallback because the
+      // signed-in project account is the authoritative identity for the browser
+      // session, and Appwrite may return membership metadata differently depending
+      // on membership privacy/session state.
+      let myMembership = memberships.find(m => m.userId === currentUser.$id);
+
+      if (!myMembership && currentUser.email) {
+        const currentEmail = currentUser.email.trim().toLowerCase();
+        myMembership = memberships.find(
+          m => (m.userEmail || "").trim().toLowerCase() === currentEmail
+        );
+      }
+
+      // If Teams.list() has already confirmed this account belongs to this team
+      // and there is exactly one membership, that membership must be the current
+      // account's membership.
+      if (!myMembership && memberships.length === 1 && team.total === 1) {
+        myMembership = memberships[0];
+      }
+
+      if (!myMembership) {
+        const details = memberships.map(m => ({
+          membershipId: m.$id,
+          userId: m.userId,
+          userEmail: m.userEmail,
+          confirm: m.confirm,
+          joined: m.joined,
+          roles: m.roles || []
+        }));
+        throw new Error(
+          `Appwrite confirms this account belongs to the team, but the membership record could not be matched.\\n` +
+          `Current account: ${currentUser.email} (${currentUser.$id})\\n` +
+          `Memberships returned: ${JSON.stringify(details, null, 2)}`
+        );
+      }
+
+      // Fetch the individual membership to get the authoritative role list.
+      let fullMembership = myMembership;
+      try {
+        fullMembership = await teams.getMembership({
+          teamId: CONFIG.teamId,
+          membershipId: myMembership.$id
+        });
+      } catch (membershipError) {
+        console.warn("Could not fetch individual membership; using listMemberships result.", membershipError);
+      }
+
+      // Keep the richer membership object in the local member list.
+      currentTeamMembers = currentTeamMembers.map(m =>
+        m.$id === myMembership.$id ? { ...m, ...fullMembership } : m
+      );
+
+      isOwner = Array.isArray(fullMembership.roles)
+        ? fullMembership.roles.includes("owner")
+        : Array.isArray(myMembership.roles)
+          ? myMembership.roles.includes("owner")
+          : false;
+
+      ownerUserId = (
+        currentTeamMembers.find(m => Array.isArray(m.roles) && m.roles.includes("owner")) || {}
+      ).userId || null;
+
+      $("rolePill").textContent = isOwner ? "Owner" : "Friend";
+      $("settingsSection").style.display = isOwner ? "" : "none";
+      $("settingsTabBtn").style.display = isOwner ? "" : "none";
+      $("tabLock").style.display = isOwner ? "none" : "none";
+      $("headerSubtitle").textContent = isOwner
+        ? "Owner · Shared payment dashboard"
+        : "Friend · Shared payment dashboard";
+
+      console.info("BYD Loan team resolved:", {
+        currentUserId: currentUser.$id,
+        currentUserEmail: currentUser.email,
+        teamId: CONFIG.teamId,
+        teamName: team.name,
+        membershipId: fullMembership.$id,
+        membershipUserId: fullMembership.userId,
+        membershipEmail: fullMembership.userEmail,
+        roles: fullMembership.roles || []
+      });
+    }
+
+    async function loadSettings() {
+      try {
+        settings = await tablesDB.getRow({
+          databaseId: CONFIG.databaseId,
+          tableId: CONFIG.settingsTableId,
+          rowId: "loan_settings"
+        });
+        hide($("setupPanel"));
+        show($("dashboard"));
+        populateSettingsSummary();
+      } catch (err) {
+        // A missing settings row means the owner has not initialized the loan yet.
+        // Authentication/team/table errors are surfaced separately by bootApp.
+        if (isOwner && (err?.code === 404 || err?.type === "row_not_found")) {
+          show($("setupPanel"));
+          hide($("dashboard"));
+          settings = null;
+          return;
+        }
+        if (isOwner) {
+          // Keep the useful original error; do not silently turn permission/config errors into setup.
+          throw err;
+        }
+        throw new Error("Loan has not been initialized by the owner yet. Ask the owner to initialize the loan first.");
+      }
+    }
+
+    // ---------- Database ----------
+    async function fetchRows(tableId) {
+      const result = await tablesDB.listRows({
+        databaseId: CONFIG.databaseId,
+        tableId,
+        queries: [Query.limit(500)]
+      });
+      return result.rows || [];
+    }
+
+    async function refreshAll() {
+      if (!settings) return;
+      [financierRows, friendRows] = await Promise.all([
+        fetchRows(CONFIG.financierTableId),
+        fetchRows(CONFIG.friendTableId)
+      ]);
+      renderDashboard();
+    }
+
+    async function createOrUpdateSettings(values) {
+      const permissions = [
+        Permission.read(Role.team(CONFIG.teamId)),
+        Permission.update(Role.team(CONFIG.teamId, "owner")),
+        Permission.delete(Role.team(CONFIG.teamId, "owner"))
+      ];
+
+      const data = {
+        vehicle: values.vehicle,
+        funded_cents: values.fundedCents,
+        regular_dd_cents: values.regularCents,
+        initial_dd_date: values.initialDate,
+        initial_dd_cents: values.initialCents,
+        regular_dd_start: values.regularStart,
+        extra_cents: values.extraCents,
+        extra_start: values.extraStart,
+        friend_cents: values.friendCents,
+        friend_start: values.friendStart,
+        cadence_days: values.cadenceDays,
+        timezone: values.timezone,
+        team_id: CONFIG.teamId,
+        owner_user_id: currentUser.$id,
+        updated_at: new Date().toISOString()
+      };
+
+      try {
+        await tablesDB.getRow({
+          databaseId: CONFIG.databaseId,
+          tableId: CONFIG.settingsTableId,
+          rowId:"loan_settings"
+        });
+
+        await tablesDB.updateRow({
+          databaseId: CONFIG.databaseId,
+          tableId: CONFIG.settingsTableId,
+          rowId:"loan_settings",
+          data
+        });
+      } catch (err) {
+        // Create only when the settings row really does not exist.
+        if (err?.code !== 404) throw err;
+
+        await tablesDB.createRow({
+          databaseId: CONFIG.databaseId,
+          tableId: CONFIG.settingsTableId,
+          rowId:"loan_settings",
+          data,
+          permissions
+        });
+      }
+    }
+
+    function financierRowPermissions() {
+      return [
+        Permission.read(Role.team(CONFIG.teamId)),
+        Permission.update(Role.team(CONFIG.teamId, "owner")),
+        Permission.delete(Role.team(CONFIG.teamId, "owner"))
+      ];
+    }
+
+    function friendRowPermissions() {
+      return [
+        Permission.read(Role.team(CONFIG.teamId)),
+        Permission.update(Role.team(CONFIG.teamId)),
+        Permission.delete(Role.team(CONFIG.teamId))
+      ];
+    }
+
+    async function ensureSchedule({quiet=false}={}) {
+      if (!settings) return;
+      const today = todayKey();
+      const until = addDays(today, CONFIG.scheduleDays);
+      const existingFin = new Set(financierRows.map(r => r.$id));
+      const existingFriend = new Set(friendRows.map(r => r.$id));
+
+      const creates = [];
+
+      // Initial DD
+      const initialId = `initial-${settings.initial_dd_date}`;
+      if (!existingFin.has(initialId)) {
+        creates.push(tablesDB.createRow({
+          databaseId: CONFIG.databaseId,
+          tableId: CONFIG.financierTableId,
+          rowId: initialId,
+          data: {
+            cycle_key: initialId,
+            due_date: settings.initial_dd_date,
+            type: "initial_direct_debit",
+            amount_cents: settings.initial_dd_cents,
+            status: "scheduled",
+            payment_method: "direct_debit",
+            paid_date: null,
+            paid_by: null,
+            notes: "Initial direct debit",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          },
+          permissions: financierRowPermissions()
+        }).catch(err => null));
+      }
+
+      // Regular DD schedule
+      for (let d = settings.regular_dd_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
+        const rowId = `dd-${d}`;
+        if (!existingFin.has(rowId)) {
+          creates.push(tablesDB.createRow({
+            databaseId: CONFIG.databaseId,
+            tableId: CONFIG.financierTableId,
+            rowId,
+            data: {
+              cycle_key: rowId,
+              due_date: d,
+              type: "direct_debit",
+              amount_cents: settings.regular_dd_cents,
+              status: "scheduled",
+              payment_method: "direct_debit",
+              notes: "Regular fortnightly direct debit",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            },
+            permissions: financierRowPermissions()
+          }).catch(err => null));
+        }
+      }
+
+      // Extra payment schedule
+      for (let d = settings.extra_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
+        const rowId = `extra-${d}`;
+        if (!existingFin.has(rowId)) {
+          creates.push(tablesDB.createRow({
+            databaseId: CONFIG.databaseId,
+            tableId: CONFIG.financierTableId,
+            rowId,
+            data: {
+              cycle_key: rowId,
+              due_date: d,
+              type: "extra_payment",
+              amount_cents: settings.extra_cents,
+              status: "scheduled",
+              notes: "Manual additional payment",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            },
+            permissions: financierRowPermissions()
+          }).catch(err => null));
+        }
+      }
+
+      // Friend schedule
+      for (let d = settings.friend_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
+        const rowId = `friend-${d}`;
+        if (!existingFriend.has(rowId)) {
+          creates.push(tablesDB.createRow({
+            databaseId: CONFIG.databaseId,
+            tableId: CONFIG.friendTableId,
+            rowId,
+            data: {
+              cycle_key: rowId,
+              due_date: d,
+              type: "friend_payment",
+              amount_cents: settings.friend_cents,
+              status: "scheduled",
+              notes: "Incoming payment from friend",
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            },
+            permissions: friendRowPermissions()
+          }).catch(err => null));
+        }
+      }
+
+      if (creates.length) await Promise.all(creates);
+      if (!quiet) {
+        await refreshAll();
+        setRuntime("Schedule synced through " + formatDate(until));
+      }
+    }
+
+    async function updatePayment(row, typeTable, data) {
+      await tablesDB.updateRow({
+        databaseId: CONFIG.databaseId,
+        tableId: typeTable,
+        rowId: row.$id,
+        data: {...data, updated_at:new Date().toISOString()}
+      });
+    }
+
+    // ---------- Rendering ----------
+    function renderDashboard() {
+      $("vehicleTitle").textContent = settings.vehicle || "BYD";
+      $("fundedMeta").textContent = money(settings.funded_cents);
+
+      const finPaid = financierRows.reduce((sum,r) => {
+        const s = statusForRow(r);
+        return ["paid","auto_paid"].includes(s) ? sum + Number(r.amount_cents||0) : sum;
+      },0);
+
+      const extraPaid = financierRows
+        .filter(r => r.type === "extra_payment")
+        .reduce((sum,r) => statusForRow(r) === "paid" ? sum + Number(r.amount_cents||0) : sum,0);
+
+      const friendReceived = friendRows.reduce((sum,r) =>
+        statusForRow(r) === "paid" ? sum + Number(r.amount_cents||0) : sum,0);
+
+      $("metricFinancier").textContent = money(finPaid);
+      $("metricRemaining").textContent = money(Math.max(0, Number(settings.funded_cents || 0) - finPaid));
+      $("metricExtra").textContent = money(extraPaid);
+      $("metricFriend").textContent = money(friendReceived);
+
+      const nextManual = [...financierRows, ...friendRows]
+        .filter(r => ["extra_payment","friend_payment"].includes(r.type))
+        .map(r => ({...r, derivedStatus:statusForRow(r)}))
+        .filter(r => !["paid"].includes(r.derivedStatus))
+        .sort((a,b) => a.due_date.localeCompare(b.due_date))[0];
+
+      if (nextManual) {
+        $("nextActionAmount").textContent = money(nextManual.amount_cents);
+        $("nextActionText").textContent = `${typeLabel(nextManual.type)} · ${formatDate(nextManual.due_date)}`;
+        $("nextActionBtn").onclick = () => {
+          activateTab("historyTab");
+          openPaymentModal(nextManual);
+        };
+      } else {
+        $("nextActionAmount").textContent = "$0.00";
+        $("nextActionText").textContent = "No outstanding manual payment";
+        $("nextActionBtn").onclick = () => openPaymentModal();
+      }
+
+      const horizon = addDays(todayKey(), 120);
+      const upcoming = [...financierRows, ...friendRows]
+        .filter(r => compareDate(r.due_date, todayKey()) >= 0 && compareDate(r.due_date, horizon) <= 0)
+        .sort((a,b) => a.due_date.localeCompare(b.due_date) || typeRank(a.type)-typeRank(b.type));
+
+      $("scheduleSub").textContent = `${upcoming.length} events in the next 120 days`;
+      $("upcomingList").innerHTML = upcoming.length ? upcoming.map(renderEvent).join("") :
+        `<div class="empty">No upcoming events. Use “Sync schedule”.</div>`;
+
+      const history = [...financierRows, ...friendRows]
+        .filter(r => compareDate(r.due_date, todayKey()) <= 0 || statusForRow(r) === "paid")
+        .sort((a,b) => b.due_date.localeCompare(a.due_date));
+
+      $("historyBody").innerHTML = history.length ? history.map(renderHistoryRow).join("") :
+        `<tr><td colspan="8"><div class="empty">No payment history yet.</div></td></tr>`;
+
+      populateSettingsSummary();
+    }
+
+    function typeRank(type) {
+      return {
+        direct_debit:1,
+        initial_direct_debit:1,
+        extra_payment:2,
+        friend_payment:3
+      }[type] || 9;
+    }
+
+    function renderEvent(row) {
+      const st = statusForRow(row);
+      const manual = row.type === "extra_payment" || row.type === "friend_payment";
+      const dueNow = manual && isDueToday(row.due_date) && st !== "paid";
+
+      let action = "";
+      if (manual && st !== "paid") {
+        action = `<button class="small-btn" onclick="openPaymentModalById('${escapeHtml(row.$id)}','${escapeHtml(row.type)}')">${dueNow ? "Log payment" : "Log when paid"}</button>`;
+      } else if (manual && st === "paid" && isOwner) {
+        action = `<button class="small-btn" onclick="openPaymentModalById('${escapeHtml(row.$id)}','${escapeHtml(row.type)}')">Edit payment</button>`;
+      }
+
+      return `
+        <div class="event">
+          <div class="date-col">${escapeHtml(formatDate(row.due_date,{year:false}))}<span>${escapeHtml(dayLabel(row.due_date))}</span></div>
+          <div>
+            <div class="event-title">${escapeHtml(typeLabel(row.type))}</div>
+            <div class="event-desc">${escapeHtml(row.type === "direct_debit" ? "Scheduled financier direct debit" : row.type === "extra_payment" ? "Manual additional payment" : "Incoming payment from friend")}</div>
+          </div>
+          <div class="event-amount">${money(row.amount_cents)}<small>${manual ? (row.payment_method ? methodLabel(row.payment_method) : "Manual") : "Automatic DD"}</small></div>
+          <div>${statusBadge(dueNow ? "due" : st)}</div>
+          <div class="event-actions">${action}</div>
+        </div>
+      `;
+    }
+
+    function renderHistoryRow(row) {
+      const st = statusForRow(row);
+      const paidBy = row.paid_by ? findUserNameById(row.paid_by) : "—";
+      const proof = row.proof_file_id
+        ? `<button class="link-btn" onclick="openReceipt('${escapeHtml(row.proof_file_id)}')">View receipt</button>`
+        : "—";
+
+      const canEdit = isOwner && st !== "scheduled";
+      const action = canEdit
+        ? `<button class="small-btn" onclick="openPaymentModalById('${escapeHtml(row.$id)}','${escapeHtml(row.type)}')">Edit</button>`
+        : "—";
+
+      return `
+        <tr>
+          <td data-label="Date">${escapeHtml(formatDate(row.due_date))}</td>
+          <td data-label="Type">${escapeHtml(typeLabel(row.type))}</td>
+          <td data-label="Method">${escapeHtml(row.payment_method ? methodLabel(row.payment_method) : (row.type.includes("direct_debit") ? "Direct debit" : "—"))}</td>
+          <td data-label="Paid by">${escapeHtml(paidBy)}</td>
+          <td data-label="Status">${statusBadge(st)}</td>
+          <td data-label="Amount" class="amount">${money(row.amount_cents)}</td>
+          <td data-label="Proof">${proof}</td>
+          <td data-label="Actions">
+            <div class="history-actions">${action}</div>
+          </td>
+        </tr>
+      `;
+    }
+
+    function populateSettingsSummary() {
+      if (!settings || !isOwner) return;
+      $("settingsSummary").innerHTML = `
+        <form id="editSettingsForm">
+          <div class="settings-grid">
+            <div class="field"><label>Vehicle</label><input id="eVehicle" value="${escapeHtml(settings.vehicle)}"></div>
+            <div class="field"><label>Funded amount</label><input id="eFunded" type="number" step="0.01" value="${(settings.funded_cents/100).toFixed(2)}"></div>
+            <div class="field"><label>Cadence days</label><input id="eCadence" type="number" min="1" value="${settings.cadence_days}"></div>
+
+            <div class="field"><label>Initial DD date</label><input id="eInitialDate" type="date" value="${settings.initial_dd_date}"></div>
+            <div class="field"><label>Initial DD amount</label><input id="eInitialAmount" type="number" step="0.01" value="${(settings.initial_dd_cents/100).toFixed(2)}"></div>
+            <div class="field"><label>Regular DD start</label><input id="eRegularStart" type="date" value="${settings.regular_dd_start}"></div>
+
+            <div class="field"><label>Regular DD amount</label><input id="eRegularAmount" type="number" step="0.01" value="${(settings.regular_dd_cents/100).toFixed(2)}"></div>
+            <div class="field"><label>Extra start</label><input id="eExtraStart" type="date" value="${settings.extra_start}"></div>
+            <div class="field"><label>Extra amount</label><input id="eExtraAmount" type="number" step="0.01" value="${(settings.extra_cents/100).toFixed(2)}"></div>
+
+            <div class="field"><label>Friend first due</label><input id="eFriendStart" type="date" value="${settings.friend_start}"></div>
+            <div class="field"><label>Friend amount</label><input id="eFriendAmount" type="number" step="0.01" value="${(settings.friend_cents/100).toFixed(2)}"></div>
+            <div class="field"><label>Timezone</label><input id="eTimezone" value="${escapeHtml(settings.timezone)}"></div>
+          </div>
+          <div class="settings-actions">
+            <button class="primary-btn" type="submit">Save settings</button>
+          </div>
+        </form>
+      `;
+
+      $("editSettingsForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        try {
+          const values = readSettingsForm("e");
+
+          const changes = [
+            ["Vehicle", settings.vehicle, values.vehicle],
+            ["Funded amount", money(settings.funded_cents), money(values.fundedCents)],
+            ["Regular DD amount", money(settings.regular_dd_cents), money(values.regularCents)],
+            ["Regular DD start", formatDate(settings.regular_dd_start), formatDate(values.regularStart)],
+            ["Extra payment amount", money(settings.extra_cents), money(values.extraCents)],
+            ["Extra payment start", formatDate(settings.extra_start), formatDate(values.extraStart)],
+            ["Friend payment amount", money(settings.friend_cents), money(values.friendCents)],
+            ["Friend payment start", formatDate(settings.friend_start), formatDate(values.friendStart)],
+            ["Cadence", `${settings.cadence_days} days`, `${values.cadenceDays} days`],
+            ["Timezone", settings.timezone, values.timezone]
+          ].filter(([,before,after]) => before !== after);
+
+          if (!changes.length) {
+            setRuntime("No settings changes detected.");
+            return;
+          }
+
+          const summary = changes.map(([label,before,after]) => `${label}: ${before} → ${after}`).join("\\n");
+          const confirmed = window.confirm(
+            `Confirm loan settings change?\\n\\n${summary}\\n\\n` +
+            `Future scheduled items will be reconciled. Existing payment history will not be changed.`
+          );
+          if (!confirmed) return;
+
+          await createOrUpdateSettings(values);
+
+          settings = await tablesDB.getRow({
+            databaseId:CONFIG.databaseId,
+            tableId:CONFIG.settingsTableId,
+            rowId:"loan_settings"
+          });
+
+          await reconcileFutureSchedule();
+          await refreshAll();
+          populateSettingsSummary();
+          activateTab("overviewTab");
+          setRuntime("Loan settings updated. Future schedule reconciled.");
+        } catch(err) {
+          setRuntime(readableError(err), true);
+        }
+      });
+    }
+
+    async function reconcileFutureSchedule() {
+      if (!settings || !isOwner) return;
+
+      const today = todayKey();
+      const until = addDays(today, CONFIG.scheduleDays);
+
+      const freshFinancier = await fetchRows(CONFIG.financierTableId);
+      const freshFriend = await fetchRows(CONFIG.friendTableId);
+
+      const desiredFin = new Map();
+      const desiredFriend = new Map();
+
+      desiredFin.set(`initial-${settings.initial_dd_date}`, {
+        due_date: settings.initial_dd_date,
+        type: "initial_direct_debit",
+        amount_cents: settings.initial_dd_cents,
+        payment_method: "direct_debit",
+        notes: "Initial direct debit"
+      });
+
+      for (let d = settings.regular_dd_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
+        desiredFin.set(`dd-${d}`, {
+          due_date:d,
+          type:"direct_debit",
+          amount_cents:settings.regular_dd_cents,
+          payment_method:"direct_debit",
+          notes:"Regular fortnightly direct debit"
+        });
+      }
+
+      for (let d = settings.extra_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
+        desiredFin.set(`extra-${d}`, {
+          due_date:d,
+          type:"extra_payment",
+          amount_cents:settings.extra_cents,
+          payment_method:null,
+          notes:"Manual additional payment"
+        });
+      }
+
+      for (let d = settings.friend_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
+        desiredFriend.set(`friend-${d}`, {
+          due_date:d,
+          type:"friend_payment",
+          amount_cents:settings.friend_cents,
+          notes:"Incoming payment from friend"
+        });
+      }
+
+      // Delete obsolete future scheduled rows only. Never delete paid/past history.
+      for (const row of freshFinancier) {
+        if (row.status === "scheduled" && compareDate(row.due_date, today) >= 0) {
+          if (!desiredFin.has(row.cycle_key)) {
+            try {
+              await tablesDB.deleteRow({
+                databaseId:CONFIG.databaseId,
+                tableId:CONFIG.financierTableId,
+                rowId:row.$id
+              });
+            } catch (err) {
+              console.warn("Could not delete obsolete financier schedule row", row.$id, err);
+            }
+          }
+        }
+      }
+
+      for (const row of freshFriend) {
+        if (row.status === "scheduled" && compareDate(row.due_date, today) >= 0) {
+          if (!desiredFriend.has(row.cycle_key)) {
+            try {
+              await tablesDB.deleteRow({
+                databaseId:CONFIG.databaseId,
+                tableId:CONFIG.friendTableId,
+                rowId:row.$id
+              });
+            } catch (err) {
+              console.warn("Could not delete obsolete friend schedule row", row.$id, err);
+            }
+          }
+        }
+      }
+
+      // Upsert desired future scheduled rows.
+      const existingFinByKey = new Map(freshFinancier.map(r => [r.cycle_key, r]));
+      const existingFriendByKey = new Map(freshFriend.map(r => [r.cycle_key, r]));
+
+      for (const [key, item] of desiredFin) {
+        const existing = existingFinByKey.get(key);
+        if (existing) {
+          if (existing.status === "scheduled") {
+            await updatePayment(existing, CONFIG.financierTableId, {
+              due_date:item.due_date,
+              amount_cents:item.amount_cents,
+              payment_method:item.payment_method,
+              notes:item.notes
+            });
+          }
+        } else {
+          await tablesDB.createRow({
+            databaseId:CONFIG.databaseId,
+            tableId:CONFIG.financierTableId,
+            rowId:key,
+            data:{
+              cycle_key:key,
+              due_date:item.due_date,
+              type:item.type,
+              amount_cents:item.amount_cents,
+              status:"scheduled",
+              payment_method:item.payment_method,
+              paid_date:null,
+              paid_by:null,
+              notes:item.notes,
+              created_at:new Date().toISOString(),
+              updated_at:new Date().toISOString()
+            },
+            permissions:financierRowPermissions()
+          });
+        }
+      }
+
+      for (const [key, item] of desiredFriend) {
+        const existing = existingFriendByKey.get(key);
+        if (existing) {
+          if (existing.status === "scheduled") {
+            await updatePayment(existing, CONFIG.friendTableId, {
+              due_date:item.due_date,
+              amount_cents:item.amount_cents,
+              notes:item.notes
+            });
+          }
+        } else {
+          await tablesDB.createRow({
+            databaseId:CONFIG.databaseId,
+            tableId:CONFIG.friendTableId,
+            rowId:key,
+            data:{
+              cycle_key:key,
+              due_date:item.due_date,
+              type:item.type,
+              amount_cents:item.amount_cents,
+              status:"scheduled",
+              payment_method:null,
+              paid_date:null,
+              paid_by:null,
+              proof_file_id:null,
+              reference:null,
+              notes:item.notes,
+              created_at:new Date().toISOString(),
+              updated_at:new Date().toISOString()
+            },
+            permissions:friendRowPermissions()
+          });
+        }
+      }
+
+      [financierRows, friendRows] = await Promise.all([
+        fetchRows(CONFIG.financierTableId),
+        fetchRows(CONFIG.friendTableId)
+      ]);
+    }
+
+    function readSettingsForm(prefix) {
+      return {
+        vehicle: $(`${prefix}Vehicle`).value.trim(),
+        fundedCents: toCents($(`${prefix}Funded`).value),
+        cadenceDays: Number($(`${prefix}Cadence`).value),
+        initialDate: $(`${prefix}InitialDate`).value,
+        initialCents: toCents($(`${prefix}InitialAmount`).value),
+        regularStart: $(`${prefix}RegularStart`).value,
+        regularCents: toCents($(`${prefix}RegularAmount`).value),
+        extraStart: $(`${prefix}ExtraStart`).value,
+        extraCents: toCents($(`${prefix}ExtraAmount`).value),
+        friendStart: $(`${prefix}FriendStart`).value,
+        friendCents: toCents($(`${prefix}FriendAmount`).value),
+        timezone: $(`${prefix}Timezone`).value.trim() || "Australia/Sydney"
+      };
+    }
+
+    // ---------- Setup form ----------
+    $("setupForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      if (!isOwner) return;
+      try {
+        const values = readSettingsForm("s");
+        if (!values.vehicle || !values.initialDate || !values.regularStart || !values.extraStart || !values.friendStart) {
+          throw new Error("Complete all required fields.");
+        }
+        await createOrUpdateSettings(values);
+        settings = await tablesDB.getRow({
+          databaseId:CONFIG.databaseId,
+          tableId:CONFIG.settingsTableId,
+          rowId:"loan_settings"
+        });
+        await ensureSchedule({quiet:true});
+        await refreshAll();
+        hide($("setupPanel"));
+        show($("dashboard"));
+        activateTab("overviewTab");
+        setRuntime("Loan initialized and schedule generated.");
+      } catch(err) {
+        setRuntime(readableError(err), true);
+      }
+    });
+
+    // ---------- Payment modal ----------
+    $("closePaymentModal").addEventListener("click", closePaymentModal);
+    $("cancelPaymentBtn").addEventListener("click", closePaymentModal);
+    $("paymentModal").addEventListener("click", e => {
+      if (e.target === $("paymentModal")) closePaymentModal();
+    });
+
+    $("pType").addEventListener("change", () => {
+      const type = $("pType").value;
+      if (type === "friend_payment") $("pAmount").value = (settings.friend_cents/100).toFixed(2);
+      if (type === "extra_payment") $("pAmount").value = (settings.extra_cents/100).toFixed(2);
+      if (type === "direct_debit") $("pAmount").value = (settings.regular_dd_cents/100).toFixed(2);
+      if (type === "initial_direct_debit") $("pAmount").value = (settings.initial_dd_cents/100).toFixed(2);
+
+      const direct = type === "direct_debit" || type === "initial_direct_debit";
+      $("pMethod").disabled = direct;
+      $("pScreenshot").disabled = direct;
+      $("pMethod").value = direct ? "direct_debit" : "bank_transfer";
+      $("paymentModalTitle").textContent = typeLabel(type);
+    });
+
+    $("logFriendBtn").addEventListener("click", () => openPaymentModal({type:"friend_payment"}));
+
+    function openPaymentModal(row=null) {
+      currentModalRow = row || null;
+      show($("paymentModal"));
+      setMsg($("paymentMsg"), "");
+
+      const isExisting = Boolean(row);
+      const isDirectDebit = row?.type === "direct_debit" || row?.type === "initial_direct_debit";
+
+      $("pType").value = row?.type || "friend_payment";
+      $("pType").disabled = isExisting;
+      $("pDate").value = row?.paid_date || row?.due_date || todayKey();
+      $("pAmount").value = ((row?.amount_cents ?? (row?.type === "extra_payment" ? settings.extra_cents : settings.friend_cents))/100).toFixed(2);
+      $("pMethod").value = row?.payment_method || "bank_transfer";
+      $("pReference").value = row?.reference || "";
+      $("pNotes").value = row?.notes || "";
+      $("pScreenshot").value = "";
+
+      // Direct debits are not manual receipts.
+      $("pMethod").disabled = isDirectDebit;
+      if (isDirectDebit) $("pMethod").value = "direct_debit";
+      $("pScreenshot").disabled = isDirectDebit;
+
+      $("paymentModalTitle").textContent =
+        isExisting
+          ? (row?.type === "friend_payment" ? "Edit friend payment" :
+             row?.type === "extra_payment" ? "Edit extra payment" :
+             "Edit financier payment")
+          : "Log payment";
+
+      $("paymentModalSubtitle").textContent = row?.due_date
+        ? `${typeLabel(row.type)} · ${formatDate(row.due_date)}${isExisting ? " · edit existing record" : ""}`
+        : "Create or update the shared payment record.";
+    }
+
+    window.openPaymentModalById = function(id, type) {
+      const list = type === "friend_payment" ? friendRows : financierRows;
+      const row = list.find(r => r.$id === id);
+      if (row) openPaymentModal(row);
+    };
+
+    function closePaymentModal() {
+      hide($("paymentModal"));
+      currentModalRow = null;
+    }
+
+    $("paymentForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      setMsg($("paymentMsg"), "");
+      try {
+        const type = $("pType").value;
+        const amountCents = toCents($("pAmount").value);
+        const date = $("pDate").value;
+        const method = $("pMethod").value;
+        const reference = $("pReference").value.trim();
+        const notes = $("pNotes").value.trim();
+        const file = $("pScreenshot").files[0] || null;
+
+        if (!date || amountCents <= 0) throw new Error("Enter a valid date and amount.");
+
+        // If an existing scheduled row is being completed, update the same row.
+        // If none is selected, try to match the appropriate scheduled row by date.
+        let row = currentModalRow;
+
+        if (!row) {
+          const list = type === "friend_payment" ? friendRows : financierRows;
+          row = list.find(r => r.due_date === date && r.type === type) || null;
+        }
+
+        let proofFileId = row?.proof_file_id || null;
+
+        if (file) {
+          const uploaded = await storage.createFile({
+            bucketId: CONFIG.storageBucketId,
+            fileId: ID.unique(),
+            file,
+            permissions: [Permission.read(Role.team(CONFIG.teamId))]
+          });
+          proofFileId = uploaded.$id;
+        }
+
+        const isDirectDebitType = type === "direct_debit" || type === "initial_direct_debit";
+        const data = {
+          status:"paid",
+          amount_cents: amountCents,
+          paid_date:date,
+          paid_by:currentUser.$id,
+          payment_method:isDirectDebitType ? "direct_debit" : method,
+          reference: reference || null,
+          notes: notes || null
+        };
+
+        if (type === "friend_payment") data.proof_file_id = proofFileId;
+
+        if (row) {
+          const tableId = type === "friend_payment" ? CONFIG.friendTableId : CONFIG.financierTableId;
+          // Only the appropriate row can be updated.
+          await updatePayment(row, tableId, data);
+        } else {
+          // For a new friend/extra payment that does not have a matching scheduled row,
+          // create a deterministic record to avoid duplicates.
+          const tableId = type === "friend_payment" ? CONFIG.friendTableId : CONFIG.financierTableId;
+          const rowId = `${type === "friend_payment" ? "friend-paid" : "extra-paid"}-${date}-${currentUser.$id.slice(0,8)}`;
+
+          const permissions = type === "friend_payment"
+            ? friendRowPermissions()
+            : financierRowPermissions();
+
+          await tablesDB.createRow({
+            databaseId:CONFIG.databaseId,
+            tableId,
+            rowId:ID.unique(),
+            data:{
+              cycle_key:rowId,
+              due_date:date,
+              type,
+              amount_cents:amountCents,
+              status:"paid",
+              paid_date:date,
+              paid_by:currentUser.$id,
+              payment_method:method,
+              reference:reference || null,
+              notes:notes || null,
+              proof_file_id: proofFileId,
+              created_at:new Date().toISOString(),
+              updated_at:new Date().toISOString()
+            },
+            permissions
+          });
+        }
+
+        closePaymentModal();
+        await refreshAll();
+        setRuntime(`${typeLabel(type)} recorded as paid.`);
+      } catch(err) {
+        setMsg($("paymentMsg"), readableError(err), "error");
+      }
+    });
+
+    // ---------- Receipts ----------
+    window.openReceipt = function(fileId) {
+      const url = storage.getFileView({
+        bucketId:CONFIG.storageBucketId,
+        fileId
+      });
+      window.open(url, "_blank", "noopener,noreferrer");
+    };
+
+    // ---------- Realtime ----------
+    function subscribeRealtime() {
+      unsubscribers.forEach(fn => { try{fn()}catch{} });
+      unsubscribers = [];
+
+      const tableIds = [
+        CONFIG.settingsTableId,
+        CONFIG.financierTableId,
+        CONFIG.friendTableId
+      ];
+
+      for (const tableId of tableIds) {
+        try {
+          const unsub = client.subscribe(
+            `tablesdb.${CONFIG.databaseId}.tables.${tableId}.rows`,
+            async () => {
+              try {
+                await loadTeam();
+                await loadSettings();
+                if (settings) await refreshAll();
+              } catch {}
+            }
+          );
+          unsubscribers.push(unsub);
+        } catch (err) {
+          console.warn("Realtime subscription failed", err);
+        }
+      }
+    }
+
+    // ---------- Tabs ----------
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (btn.id === "settingsTabBtn" && !isOwner) return;
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(panel => panel.classList.remove("active"));
+        btn.classList.add("active");
+        const panel = document.getElementById(btn.dataset.tab);
+        if (panel) panel.classList.add("active");
+      });
+    });
+
+    function activateTab(tabId) {
+      const btn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+      const panel = document.getElementById(tabId);
+      if (!btn || !panel) return;
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      panel.classList.add("active");
+      window.scrollTo({top:0, behavior:"smooth"});
+    }
+
+    // ---------- Buttons ----------
+    $("refreshBtn").addEventListener("click", async () => {
+      try {
+        await loadTeam();
+        await loadSettings();
+        await ensureSchedule({quiet:true});
+        await refreshAll();
+        setRuntime("Refreshed.");
+      } catch(err) {
+        setRuntime(readableError(err), true);
+      }
+    });
+
+    $("syncScheduleBtn").addEventListener("click", async () => {
+      try {
+        await ensureSchedule();
+      } catch(err) {
+        setRuntime(readableError(err), true);
+      }
+    });
+
+    function setRuntime(text, error=false) {
+      const el = $("runtimeMsg");
+      setMsg(el, text, error ? "error" : "success");
+    }
+
+    function readableError(err) {
+      if (!err) return "Unknown error.";
+      if (typeof err === "string") return err;
+      return err.message || err.response?.message || "Request failed.";
+    }
+
+    // ---------- Startup ----------
+    (async function init(){
+      try {
+        if (CONFIG.teamId === "YOUR_TEAM_ID") {
+          setMsg($("authMsg"),
+            "Appwrite is connected. Create the Team in Appwrite, then replace CONFIG.teamId in index.html with that Team ID.",
+            "error"
+          );
+          return;
+        }
+
+        try {
+          await account.get();
+          await bootApp();
+        } catch {
+          // Not signed in; remain on auth screen.
+        }
+      } catch(err) {
+        setMsg($("authMsg"), readableError(err), "error");
+      }
+    })();
+  </script>
+</body>
+</html>
