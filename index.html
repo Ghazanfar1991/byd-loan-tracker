@@ -552,6 +552,9 @@
       projectId: "6ab0d3cf00379308f210",
       projectName: "BYD Sealion 8",
 
+      // UI hint only. Appwrite permissions remain the real security boundary.
+      ownerEmail: "ghazanfaryt1@gmail.com",
+
       // Keep these exact IDs when creating the Appwrite resources.
       databaseId: "carloan",
       settingsTableId: "settings",
@@ -721,8 +724,9 @@
     }
 
     function findUserNameById(userId) {
-      const m = currentTeamMembers.find(x => x.userId === userId);
-      return m?.userName || (userId === currentUser?.$id ? currentUser?.name : "Member");
+      if (!userId) return "—";
+      if (userId === currentUser?.$id) return currentUser?.name || "You";
+      return "Other member";
     }
 
     function allRows() {
@@ -845,9 +849,20 @@
         throw new Error("Set CONFIG.teamId in index.html first.");
       }
 
-      // The client Teams.list() endpoint is specifically scoped to the
-      // currently authenticated user and returns only teams that user belongs to.
-      // Use it as the primary membership check.
+      /*
+       * IMPORTANT:
+       * Appwrite can hide membership userId/userEmail fields when Membership
+       * Privacy is enabled. That is exactly what was happening here: the team
+       * memberships were returned with blank userId/userEmail values even
+       * though the membership was confirmed and its roles were visible.
+       *
+       * Therefore we only use Teams.list() to prove that the signed-in account
+       * belongs to the configured team. We do NOT try to match membership
+       * records by userId/email.
+       *
+       * The ownerEmail below is UI-only. Database/table/file permissions in
+       * Appwrite remain the actual security boundary.
+       */
       const teamList = await teams.list();
       const visibleTeams = teamList.teams || [];
       const team = visibleTeams.find(t => t.$id === CONFIG.teamId);
@@ -856,102 +871,48 @@
         const visible = visibleTeams.length
           ? visibleTeams.map(t => `${t.name} (${t.$id})`).join(", ")
           : "None";
+
         throw new Error(
-          `The signed-in Appwrite account is not a member of the configured team.\\n` +
-          `Current account: ${currentUser.email} (${currentUser.$id})\\n` +
-          `Teams visible to this account: ${visible}\\n` +
+          `This signed-in account is not a member of the configured BYD Loan team.\n` +
+          `Current account: ${currentUser.email} (${currentUser.$id})\n` +
+          `Teams visible to this account: ${visible}\n` +
           `Expected team: ${CONFIG.teamId}`
         );
       }
 
       $("teamMeta").textContent = team.name || CONFIG.teamId.slice(0,8);
 
-      // Now retrieve the team's memberships so we can determine the member's role.
-      const membershipsResponse = await teams.listMemberships({
-        teamId: CONFIG.teamId
-      });
-      const memberships = membershipsResponse.memberships || [];
-      currentTeamMembers = memberships;
-
-      // Usually userId is an exact match. Keep an email fallback because the
-      // signed-in project account is the authoritative identity for the browser
-      // session, and Appwrite may return membership metadata differently depending
-      // on membership privacy/session state.
-      let myMembership = memberships.find(m => m.userId === currentUser.$id);
-
-      if (!myMembership && currentUser.email) {
-        const currentEmail = currentUser.email.trim().toLowerCase();
-        myMembership = memberships.find(
-          m => (m.userEmail || "").trim().toLowerCase() === currentEmail
-        );
-      }
-
-      // If Teams.list() has already confirmed this account belongs to this team
-      // and there is exactly one membership, that membership must be the current
-      // account's membership.
-      if (!myMembership && memberships.length === 1 && team.total === 1) {
-        myMembership = memberships[0];
-      }
-
-      if (!myMembership) {
-        const details = memberships.map(m => ({
-          membershipId: m.$id,
-          userId: m.userId,
-          userEmail: m.userEmail,
-          confirm: m.confirm,
-          joined: m.joined,
-          roles: m.roles || []
-        }));
-        throw new Error(
-          `Appwrite confirms this account belongs to the team, but the membership record could not be matched.\\n` +
-          `Current account: ${currentUser.email} (${currentUser.$id})\\n` +
-          `Memberships returned: ${JSON.stringify(details, null, 2)}`
-        );
-      }
-
-      // Fetch the individual membership to get the authoritative role list.
-      let fullMembership = myMembership;
+      // Load memberships only for display/audit information. Do not use their
+      // userId/userEmail fields because membership privacy may hide them.
       try {
-        fullMembership = await teams.getMembership({
-          teamId: CONFIG.teamId,
-          membershipId: myMembership.$id
+        const membershipsResponse = await teams.listMemberships({
+          teamId: CONFIG.teamId
         });
-      } catch (membershipError) {
-        console.warn("Could not fetch individual membership; using listMemberships result.", membershipError);
+        currentTeamMembers = membershipsResponse.memberships || [];
+      } catch (err) {
+        currentTeamMembers = [];
+        console.warn("Could not list team memberships; continuing with team access.", err);
       }
 
-      // Keep the richer membership object in the local member list.
-      currentTeamMembers = currentTeamMembers.map(m =>
-        m.$id === myMembership.$id ? { ...m, ...fullMembership } : m
+      isOwner = (
+        String(currentUser.email || "").trim().toLowerCase() ===
+        String(CONFIG.ownerEmail || "").trim().toLowerCase()
       );
-
-      isOwner = Array.isArray(fullMembership.roles)
-        ? fullMembership.roles.includes("owner")
-        : Array.isArray(myMembership.roles)
-          ? myMembership.roles.includes("owner")
-          : false;
-
-      ownerUserId = (
-        currentTeamMembers.find(m => Array.isArray(m.roles) && m.roles.includes("owner")) || {}
-      ).userId || null;
 
       $("rolePill").textContent = isOwner ? "Owner" : "Friend";
       $("settingsSection").style.display = isOwner ? "" : "none";
       $("settingsTabBtn").style.display = isOwner ? "" : "none";
-      $("tabLock").style.display = isOwner ? "none" : "none";
       $("headerSubtitle").textContent = isOwner
         ? "Owner · Shared payment dashboard"
         : "Friend · Shared payment dashboard";
 
-      console.info("BYD Loan team resolved:", {
+      console.info("BYD Loan team access resolved:", {
         currentUserId: currentUser.$id,
         currentUserEmail: currentUser.email,
         teamId: CONFIG.teamId,
         teamName: team.name,
-        membershipId: fullMembership.$id,
-        membershipUserId: fullMembership.userId,
-        membershipEmail: fullMembership.userEmail,
-        roles: fullMembership.roles || []
+        isOwner,
+        membershipCount: currentTeamMembers.length
       });
     }
 
@@ -1285,7 +1246,11 @@
 
     function renderHistoryRow(row) {
       const st = statusForRow(row);
-      const paidBy = row.paid_by ? findUserNameById(row.paid_by) : "—";
+      const paidBy = row.paid_by
+        ? (row.paid_by === currentUser?.$id
+            ? "You"
+            : (row.type === "friend_payment" ? "Friend" : "Owner"))
+        : "—";
       const proof = row.proof_file_id
         ? `<button class="link-btn" onclick="openReceipt('${escapeHtml(row.proof_file_id)}')">View receipt</button>`
         : "—";
