@@ -70,8 +70,13 @@
     .hero-action .row{display:flex;gap:8px;margin-top:15px}
     .section{margin-top:18px}
     .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
+    .section-tools{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
     .section-head h3{margin:0;font-size:17px}
     .section-head p{margin:0;color:var(--muted);font-size:12px}
+    .filter-control{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+    .filter-control label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+    .filter-select{min-height:38px;background:#0b1016;color:var(--text);border:1px solid #27313d;border-radius:10px;padding:8px 30px 8px 10px;outline:none;font-size:12px}
+    .filter-select:focus{border-color:#5f7186;box-shadow:0 0 0 3px rgba(108,168,255,.08)}
     .timeline{padding:0}
     .event{display:grid;grid-template-columns:90px minmax(0,1fr) 180px 135px;gap:14px;align-items:center;padding:15px 18px;border-bottom:1px solid rgba(255,255,255,.05)}
     .event:last-child{border-bottom:0}
@@ -218,6 +223,93 @@
       .badge{justify-self:start}
       .settings-grid,.modal-grid{grid-template-columns:1fr}
       .field.full,.modal-grid .full{grid-column:auto}
+    }
+
+    /* ---------- Phone layout refinements ---------- */
+    @media (max-width:760px){
+      .app-shell{padding-inline:12px}
+      .topbar{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:18px}
+      .topbar .brand{min-width:0;gap:10px}
+      .topbar .brand-mark{width:40px;height:40px;border-radius:13px;flex:0 0 40px}
+      .topbar .brand-mark span{font-size:14px}
+      .topbar .brand h1{font-size:18px;line-height:1.08;white-space:nowrap}
+      .topbar .brand p{font-size:11px;line-height:1.25}
+      .user-box{justify-content:flex-end;gap:8px}
+      .user-box button{min-height:44px;padding:9px 10px}
+      .ghost-btn,.primary-btn,.danger-btn,.small-btn{min-height:44px}
+
+      .hero{padding:16px;gap:12px}
+      .hero-title h2{font-size:24px;line-height:1.1}
+      .hero-meta{gap:8px 14px;line-height:1.35}
+      .hero-action{padding:15px}
+      .hero-action .amount{font-size:28px}
+
+      .tabs{margin-inline:-2px;padding:4px;gap:3px}
+      .tab-btn{min-height:44px;padding:9px 11px;font-size:11px}
+
+      .section-head{align-items:flex-start;flex-wrap:wrap}
+      .section-head > :first-child{min-width:0;flex:1 1 180px}
+      .section-tools{width:100%;justify-content:stretch}
+      .filter-control{flex:1 1 auto;min-width:0}
+      .filter-control label{display:none}
+      .filter-select{width:100%;min-height:44px;font-size:16px}
+      .section-tools .small-btn{flex:0 0 auto}
+      .metric{min-height:132px;padding:17px}
+      .metric .value{font-size:28px}
+      .metric .sub.note{max-width:none}
+
+      .event{
+        grid-template-columns:82px minmax(0,1fr) auto;
+        grid-template-areas:
+          "date content content"
+          "date amount amount"
+          "date badge actions";
+        gap:6px 12px;
+        padding:15px 14px;
+      }
+      .event .date-col{grid-area:date;align-self:start;padding-top:1px}
+      .event > div:nth-child(2){grid-area:content;min-width:0}
+      .event .event-amount{grid-area:amount;white-space:normal;text-align:left}
+      .event > div:nth-child(4){grid-area:badge;justify-self:start;align-self:center}
+      .event > div:nth-child(4),
+      .event .event-actions{height:44px;display:flex;align-items:center}
+      .event .event-actions{grid-area:actions;justify-content:flex-end;align-self:center}
+      .event-actions .small-btn{min-width:0;padding-inline:10px}
+      .event .badge{height:44px;min-height:44px;display:inline-flex;align-items:center}
+      .event-title{font-size:15px;line-height:1.25}
+      .event-desc{line-height:1.35}
+      .event-amount{font-size:20px}
+      .event-amount small{font-size:11px}
+      .badge{padding:6px 8px}
+
+      .field input,.field select,.field textarea{min-height:44px;font-size:16px}
+      .settings-actions{flex-direction:column-reverse;align-items:stretch}
+      .settings-actions button{width:100%;min-height:44px}
+      .auth-card{padding:20px}
+      .auth-tabs,.auth-tab{min-height:44px}
+      .auth-tab{padding:10px 8px}
+
+      .modal-backdrop{align-items:start;padding:10px}
+      .modal{padding:16px;border-radius:18px;max-height:calc(100vh - 20px)}
+      .modal-grid{gap:10px;margin-top:14px}
+      .icon-btn{width:44px;height:44px;flex:0 0 44px}
+    }
+
+    @media (max-width:390px){
+      .topbar .brand p{max-width:180px}
+      .ghost-btn{padding-inline:8px}
+      .hero-title{align-items:flex-start}
+      .hero-title .pill{padding:6px 8px}
+      .tabs{overflow-x:auto;scrollbar-width:none}
+      .tabs::-webkit-scrollbar{display:none}
+      .tab-btn{flex:0 0 auto}
+      .event{grid-template-columns:70px minmax(0,1fr) auto;gap:6px 10px}
+      .event-actions .small-btn{font-size:11px}
+    }
+
+    @media (pointer:coarse){
+      .ghost-btn,.primary-btn,.danger-btn,.small-btn,.link-btn,.auth-tab,.tab-btn{min-height:44px}
+      .event-actions{gap:8px}
     }
   </style>
 </head>
@@ -429,7 +521,18 @@
                 <h3>Upcoming fortnightly schedule</h3>
                 <p id="scheduleSub">—</p>
               </div>
-              <button id="syncScheduleBtn" class="small-btn">Sync schedule</button>
+              <div class="section-tools">
+                <div class="filter-control">
+                  <label for="scheduleFilter">Show</label>
+                  <select id="scheduleFilter" class="filter-select">
+                    <option value="all">All payments</option>
+                    <option value="extra_payment">Extra payments</option>
+                    <option value="friend_payment">Friend payments</option>
+                    <option value="direct_debit">Automatic deductions</option>
+                  </select>
+                </div>
+                <button id="syncScheduleBtn" class="small-btn">Sync schedule</button>
+              </div>
             </div>
             <div class="panel timeline" id="upcomingList"></div>
           </section>
@@ -442,7 +545,18 @@
                 <h3>Payment history</h3>
                 <p>Shared records. Bank transfer screenshots are attached to the same payment row.</p>
               </div>
-              <button id="logFriendBtn" class="small-btn">Log payment</button>
+              <div class="section-tools">
+                <div class="filter-control">
+                  <label for="historyFilter">Show</label>
+                  <select id="historyFilter" class="filter-select">
+                    <option value="all">All payments</option>
+                    <option value="extra_payment">Extra payments</option>
+                    <option value="friend_payment">Friend payments</option>
+                    <option value="direct_debit">Automatic deductions</option>
+                  </select>
+                </div>
+                <button id="logFriendBtn" class="small-btn">Log payment</button>
+              </div>
             </div>
             <div class="panel table-wrap">
               <table class="history-table">
@@ -603,6 +717,8 @@
     let friendRows = [];
     let currentModalRow = null;
     let unsubscribers = [];
+    let scheduleFilter = "all";
+    let historyFilter = "all";
 
     // ---------- DOM helpers ----------
     const $ = id => document.getElementById(id);
@@ -688,6 +804,14 @@
         extra_payment:"Extra payment",
         friend_payment:"Friend payment"
       }[type] || type;
+    }
+
+    function matchesPaymentFilter(row, filter) {
+      if (filter === "all") return true;
+      if (filter === "direct_debit") {
+        return row.type === "direct_debit" || row.type === "initial_direct_debit";
+      }
+      return row.type === filter;
     }
 
     function statusForRow(row) {
@@ -1193,18 +1317,20 @@
       const horizon = addDays(todayKey(), 120);
       const upcoming = [...financierRows, ...friendRows]
         .filter(r => compareDate(r.due_date, todayKey()) >= 0 && compareDate(r.due_date, horizon) <= 0)
+        .filter(r => matchesPaymentFilter(r, scheduleFilter))
         .sort((a,b) => a.due_date.localeCompare(b.due_date) || typeRank(a.type)-typeRank(b.type));
 
-      $("scheduleSub").textContent = `${upcoming.length} events in the next 120 days`;
+      $("scheduleSub").textContent = `${upcoming.length} ${upcoming.length === 1 ? "event" : "events"} in the next 120 days`;
       $("upcomingList").innerHTML = upcoming.length ? upcoming.map(renderEvent).join("") :
-        `<div class="empty">No upcoming events. Use “Sync schedule”.</div>`;
+        `<div class="empty">No upcoming ${scheduleFilter === "all" ? "events" : typeLabel(scheduleFilter).toLowerCase() + "s"} in this period.</div>`;
 
       const history = [...financierRows, ...friendRows]
         .filter(r => compareDate(r.due_date, todayKey()) <= 0 || statusForRow(r) === "paid")
+        .filter(r => matchesPaymentFilter(r, historyFilter))
         .sort((a,b) => b.due_date.localeCompare(a.due_date));
 
       $("historyBody").innerHTML = history.length ? history.map(renderHistoryRow).join("") :
-        `<tr><td colspan="8"><div class="empty">No payment history yet.</div></td></tr>`;
+        `<tr><td colspan="8"><div class="empty">No ${historyFilter === "all" ? "payment history" : typeLabel(historyFilter).toLowerCase() + " history"} found.</div></td></tr>`;
 
       populateSettingsSummary();
     }
@@ -1780,6 +1906,16 @@
     }
 
     // ---------- Buttons ----------
+    $("scheduleFilter").addEventListener("change", e => {
+      scheduleFilter = e.target.value;
+      renderDashboard();
+    });
+
+    $("historyFilter").addEventListener("change", e => {
+      historyFilter = e.target.value;
+      renderDashboard();
+    });
+
     $("refreshBtn").addEventListener("click", async () => {
       try {
         await loadTeam();
