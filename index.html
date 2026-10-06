@@ -2,308 +2,264 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#0b0f14" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#080b10" />
+  <meta name="color-scheme" content="dark" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="BYD Loan" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
   <title>BYD Loan Tracker</title>
 
 
   <style>
+    /* Mobile-first: base styles target a ~375px phone; wider layouts are layered on below. */
     :root{
       --bg:#080b10;
       --panel:#0f141b;
       --panel-2:#131a23;
+      --raised:#18212b;
       --border:#222b36;
+      --border-strong:#2f3b48;
       --text:#f5f7fa;
+      --text-2:#cbd5df;
       --muted:#8e9aaa;
       --green:#48d597;
       --amber:#f6c65b;
       --red:#ff6b7a;
       --blue:#6ca8ff;
-      --shadow:0 20px 60px rgba(0,0,0,.28);
-      --radius:22px;
+      --radius:20px;
+      --radius-sm:14px;
+      --gutter:16px;
+      --tap:44px;
+      --nav-h:64px;
+      --safe-b:env(safe-area-inset-bottom,0px);
+      --safe-t:env(safe-area-inset-top,0px);
     }
     *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",Inter,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
-    body{min-height:100vh}
-    button,input,select,textarea{font:inherit}
+    html{-webkit-text-size-adjust:100%}
+    html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+    body{min-height:100vh;min-height:100dvh;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none}
+    button,input,select,textarea{font:inherit;color:inherit}
     button{cursor:pointer}
     .hidden{display:none!important}
-    .app-shell{max-width:1400px;margin:0 auto;padding:28px 22px 60px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}
-    .brand{display:flex;align-items:center;gap:14px}
-    .brand-mark{width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#1b242f,#0c1016);border:1px solid #2d3946;display:grid;place-items:center;box-shadow:var(--shadow)}
-    .brand-mark span{font-weight:800;font-size:17px;letter-spacing:.8px}
-    .brand h1{font-size:20px;margin:0 0 3px}
-    .brand p{font-size:12px;color:var(--muted);margin:0}
-    .user-box{display:flex;align-items:center;gap:10px}
-    .user-name{font-size:13px;color:#dbe2ea}
-    .ghost-btn,.primary-btn,.danger-btn,.small-btn{
-      border:1px solid var(--border);border-radius:12px;background:var(--panel-2);color:var(--text);
-      padding:10px 13px;transition:.18s ease
+    .num{font-variant-numeric:tabular-nums}
+    :focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+    /* ---------- Buttons ---------- */
+    .btn,.ghost-btn,.primary-btn,.danger-btn,.small-btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      min-height:var(--tap);padding:10px 16px;border-radius:var(--radius-sm);
+      border:1px solid var(--border);background:var(--panel-2);color:var(--text);
+      font-size:15px;font-weight:600;line-height:1.2;transition:background .15s,border-color .15s,transform .1s;
+      touch-action:manipulation
     }
-    .ghost-btn:hover,.small-btn:hover{border-color:#394655;transform:translateY(-1px)}
+    .btn:active,.ghost-btn:active,.primary-btn:active,.danger-btn:active,.small-btn:active{transform:scale(.98)}
     .primary-btn{background:#eef4f8;color:#071017;border-color:#eef4f8;font-weight:700}
-    .primary-btn:hover{transform:translateY(-1px);background:#fff}
-    .danger-btn{background:rgba(255,107,122,.08);color:#ffdbe0;border-color:rgba(255,107,122,.25)}
-    .small-btn{padding:8px 11px;font-size:12px}
-    .grid{display:grid;gap:16px}
-    .cards-4{grid-template-columns:repeat(4,minmax(0,1fr))}
-    .cards-3{grid-template-columns:repeat(3,minmax(0,1fr))}
-    .panel{background:linear-gradient(180deg,rgba(17,22,29,.96),rgba(11,15,21,.96));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
-    .metric{padding:20px;min-height:145px;position:relative;overflow:hidden}
-    .metric .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.13em}
-    .metric .value{font-size:31px;font-weight:750;letter-spacing:-.03em;margin-top:14px}
-    .metric .sub{font-size:12px;color:var(--muted);margin-top:8px}
-    .metric .glow{position:absolute;right:-45px;bottom:-45px;width:130px;height:130px;border-radius:50%;background:rgba(108,168,255,.06);filter:blur(4px)}
-    .hero{padding:20px;display:flex;align-items:stretch;gap:16px;margin-bottom:16px}
-    .hero-main{flex:1;min-width:0}
-    .hero-title{display:flex;align-items:center;justify-content:space-between;gap:16px}
-    .hero-title h2{margin:0;font-size:31px;letter-spacing:-.04em}
-    .hero-title .pill{font-size:11px;border:1px solid #2a3542;border-radius:999px;padding:7px 10px;color:#cdd7e0;background:#111821}
-    .hero-meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:9px;color:var(--muted);font-size:12px}
-    .hero-action{width:320px;background:linear-gradient(180deg,#121a22,#0c1219);border:1px solid #2b3947;border-radius:18px;padding:17px}
-    .hero-action .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--amber)}
-    .hero-action .amount{font-size:31px;font-weight:800;margin-top:7px}
-    .hero-action .due{font-size:12px;color:#b7c0ca;margin-top:3px}
-    .hero-action .row{display:flex;gap:8px;margin-top:15px}
-    .section{margin-top:18px}
-    .section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}
-    .section-tools{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
-    .section-head h3{margin:0;font-size:17px}
-    .section-head p{margin:0;color:var(--muted);font-size:12px}
-    .filter-control{display:flex;align-items:center;gap:8px;flex:0 0 auto}
-    .filter-control label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
-    .filter-select{min-height:38px;background:#0b1016;color:var(--text);border:1px solid #27313d;border-radius:10px;padding:8px 30px 8px 10px;outline:none;font-size:12px}
-    .filter-select:focus{border-color:#5f7186;box-shadow:0 0 0 3px rgba(108,168,255,.08)}
-    .timeline{padding:0}
-    .event{display:grid;grid-template-columns:90px minmax(0,1fr) 180px 135px;gap:14px;align-items:center;padding:15px 18px;border-bottom:1px solid rgba(255,255,255,.05)}
-    .event:last-child{border-bottom:0}
-    .date-col{font-size:13px;font-weight:700}
-    .date-col span{display:block;color:var(--muted);font-size:11px;font-weight:500;margin-top:3px}
-    .event-title{font-weight:650;font-size:14px}
-    .event-desc{font-size:11px;color:var(--muted);margin-top:4px}
-    .event-amount{text-align:right;font-weight:750}
-    .event-amount small{display:block;color:var(--muted);font-size:10px;font-weight:500;margin-top:3px}
-    .badge{justify-self:end;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:7px 9px;border-radius:999px;border:1px solid transparent}
-    .badge.green{color:#bff7df;background:rgba(72,213,151,.08);border-color:rgba(72,213,151,.22)}
-    .badge.amber{color:#ffe3a1;background:rgba(246,198,91,.08);border-color:rgba(246,198,91,.2)}
-    .badge.red{color:#ffd0d6;background:rgba(255,107,122,.08);border-color:rgba(255,107,122,.22)}
-    .badge.blue{color:#cfe1ff;background:rgba(108,168,255,.08);border-color:rgba(108,168,255,.22)}
-    .table-wrap{overflow:auto}
-    table{width:100%;border-collapse:collapse;min-width:760px}
-    th,td{padding:13px 14px;border-bottom:1px solid rgba(255,255,255,.05);text-align:left;font-size:12px}
-    th{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
-    td.amount{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
-    td.right{text-align:right}
-    .empty{padding:34px 20px;text-align:center;color:var(--muted);font-size:13px}
-    .settings{padding:20px}
-    .settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-    .field{display:flex;flex-direction:column;gap:7px}
-    .field.full{grid-column:1/-1}
-    .field label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-    .field input,.field select,.field textarea{
-      width:100%;background:#0b1016;color:var(--text);border:1px solid #27313d;border-radius:12px;padding:11px 12px;outline:none
+    .danger-btn{background:rgba(255,107,122,.1);color:#ffdbe0;border-color:rgba(255,107,122,.3)}
+    .small-btn{padding:8px 14px;font-size:14px}
+    .block{width:100%}
+    .link-btn{border:0;background:transparent;color:#a7c7ff;padding:0 4px;min-height:var(--tap);font-size:14px;font-weight:600}
+    .icon-btn{width:var(--tap);height:var(--tap);display:grid;place-items:center;border:1px solid var(--border);border-radius:12px;background:var(--panel-2);font-size:20px;line-height:1}
+    @media (hover:hover){
+      .ghost-btn:hover,.small-btn:hover,.icon-btn:hover{border-color:var(--border-strong);background:var(--raised)}
+      .primary-btn:hover{background:#fff}
     }
-    .field textarea{min-height:82px;resize:vertical}
-    .field input:focus,.field select:focus,.field textarea:focus{border-color:#5f7186;box-shadow:0 0 0 3px rgba(108,168,255,.08)}
-    .settings-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
-    .auth-screen{min-height:100vh;display:grid;place-items:center;padding:22px}
-    .auth-card{width:min(460px,100%);padding:26px;border-radius:26px}
-    .auth-card h1{margin:0;font-size:28px;letter-spacing:-.04em}
-    .auth-card p{color:var(--muted);font-size:13px;line-height:1.55}
-    .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%}
-    .stack{display:grid;gap:10px}
-    .msg{font-size:12px;padding:10px 12px;border-radius:12px;border:1px solid #27313d;background:#0c1218;color:#cbd5df}
+    button:disabled{opacity:.55;cursor:default}
+
+    /* ---------- Surfaces ---------- */
+    .panel{background:linear-gradient(180deg,rgba(17,22,29,.96),rgba(11,15,21,.96));border:1px solid var(--border);border-radius:var(--radius)}
+    .eyebrow{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+    .pill{display:inline-flex;align-items:center;font-size:12px;font-weight:600;border:1px solid var(--border-strong);border-radius:999px;padding:5px 10px;color:var(--text-2);background:#111821;white-space:nowrap}
+
+    /* ---------- App bar ---------- */
+    .appbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;gap:12px;
+      padding:calc(10px + var(--safe-t)) var(--gutter) 10px;background:rgba(8,11,16,.86);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-bottom:1px solid rgba(255,255,255,.04)}
+    .brand{display:flex;align-items:center;gap:10px;min-width:0}
+    .brand-mark{width:38px;height:38px;flex:0 0 38px;border-radius:12px;background:linear-gradient(135deg,#1b242f,#0c1016);border:1px solid #2d3946;display:grid;place-items:center}
+    .brand-mark span{font-weight:800;font-size:13px;letter-spacing:.6px}
+    .brand-text{min-width:0}
+    .brand h1{font-size:17px;line-height:1.15;margin:0;white-space:nowrap}
+    .brand p{font-size:12px;color:var(--muted);margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .avatar-btn{position:relative;width:var(--tap);height:var(--tap);flex:0 0 var(--tap);border-radius:50%;border:1px solid var(--border-strong);background:var(--raised);font-weight:700;font-size:14px;display:grid;place-items:center}
+    .notif-dot{position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;background:var(--amber);border:2px solid var(--bg)}
+
+    /* ---------- Layout ---------- */
+    .app-shell{max-width:1120px;margin:0 auto;padding:14px var(--gutter) calc(var(--nav-h) + var(--safe-b) + 28px)}
+    .stack{display:grid;gap:12px}
+    .section{margin-top:22px}
+    .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .section-head h3{margin:0;font-size:18px}
+    .section-head p{margin:3px 0 0;color:var(--muted);font-size:13px;line-height:1.4}
+    .section-tools{display:flex;gap:8px;align-items:center;margin-bottom:10px}
+    .filter-control{flex:1;min-width:0}
+    .filter-control label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+    .filter-select{width:100%;min-height:var(--tap);background:#0b1016;border:1px solid #27313d;border-radius:12px;padding:8px 12px;font-size:16px;outline:none}
+
+    /* ---------- Overdue banner ---------- */
+    .alert{display:flex;gap:12px;align-items:center;padding:14px;border-radius:var(--radius-sm);margin-bottom:12px;border:1px solid rgba(255,107,122,.35);background:linear-gradient(180deg,rgba(255,107,122,.12),rgba(255,107,122,.05))}
+    .alert-icon{width:34px;height:34px;flex:0 0 34px;border-radius:50%;display:grid;place-items:center;background:rgba(255,107,122,.18);color:#ffd0d6;font-weight:800}
+    .alert-title{font-weight:700;font-size:15px}
+    .alert-text{font-size:13px;color:#ffd8dd;margin-top:2px;line-height:1.35}
+
+    /* ---------- Next action card ---------- */
+    .action-card{padding:18px;position:relative;overflow:hidden}
+    .action-card.is-overdue{border-color:rgba(255,107,122,.45)}
+    .action-card.is-due{border-color:rgba(246,198,91,.45)}
+    .action-card .eyebrow{color:var(--amber)}
+    .action-card.is-overdue .eyebrow{color:#ff9aa6}
+    .action-card.is-clear .eyebrow{color:var(--green)}
+    .action-amount{font-size:40px;font-weight:800;letter-spacing:-.03em;margin-top:6px;line-height:1.05}
+    .action-due{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px;color:var(--text-2);margin-top:8px}
+    .action-card .primary-btn{width:100%;margin-top:16px;min-height:50px;font-size:16px}
+    .action-secondary{font-size:13px;color:var(--muted);margin-top:12px;line-height:1.4}
+
+    /* ---------- Loan card ---------- */
+    .loan-card{padding:16px}
+    .loan-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .loan-top h2{margin:0;font-size:20px;letter-spacing:-.02em}
+    .loan-meta{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:6px;color:var(--muted);font-size:13px}
+    .progress{height:10px;border-radius:999px;background:#1a222c;margin-top:14px;overflow:hidden}
+    .progress > span{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#3fbf86,#6ce0b0);transition:width .6s ease}
+    .progress-legend{display:flex;justify-content:space-between;gap:8px;margin-top:8px;font-size:12px;color:var(--muted)}
+    .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:1px}
+
+    /* ---------- Metrics ---------- */
+    .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+    .metric{padding:14px;min-width:0}
+    .metric .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:700}
+    .metric .value{font-size:22px;font-weight:750;letter-spacing:-.02em;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .metric .sub{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35}
+
+    /* ---------- Notification prompt ---------- */
+    .notif-card{display:flex;gap:12px;align-items:center;padding:14px;margin-top:12px}
+    .notif-card .bell{width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:grid;place-items:center;background:rgba(108,168,255,.12);color:#cfe1ff}
+    .notif-card .copy{flex:1;min-width:0;font-size:13px;color:var(--text-2);line-height:1.4}
+    .notif-card .copy b{display:block;color:var(--text);font-size:15px;margin-bottom:2px}
+
+    /* ---------- Event / history list ---------- */
+    .list{padding:0;overflow:hidden}
+    .group-label{display:flex;justify-content:space-between;padding:12px 14px 6px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);background:rgba(255,255,255,.015)}
+    .group-label.overdue{color:#ff9aa6}
+    .group-label.today{color:var(--amber)}
+    .event{display:grid;grid-template-columns:46px minmax(0,1fr) auto;grid-template-areas:"date main side" "date actions actions";column-gap:12px;row-gap:10px;align-items:center;padding:14px;border-top:1px solid rgba(255,255,255,.05)}
+    .group-label + .event{border-top:0}
+    .date-chip{grid-area:date;align-self:start;width:46px;border-radius:12px;background:#121922;border:1px solid var(--border);text-align:center;padding:6px 0 5px}
+    .date-chip b{display:block;font-size:17px;line-height:1.1}
+    .date-chip span{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-top:1px}
+    .event.is-overdue .date-chip{border-color:rgba(255,107,122,.4);background:rgba(255,107,122,.08)}
+    .event.is-today .date-chip{border-color:rgba(246,198,91,.4);background:rgba(246,198,91,.08)}
+    .event-main{grid-area:main;min-width:0}
+    .event-title{font-weight:650;font-size:15px;line-height:1.25}
+    .event-desc{font-size:13px;color:var(--muted);margin-top:3px;line-height:1.35}
+    .event-side{grid-area:side;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+    .event-amount{font-weight:750;font-size:16px;white-space:nowrap}
+    .event-actions{grid-area:actions;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+    .event-actions:empty{display:none}
+    .event-actions .small-btn{flex:1}
+    .event-actions .link-btn{margin-right:auto}
+    #historyBody .event-actions .small-btn{flex:0 0 auto;min-width:88px}
+    .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:4px 8px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+    .badge.green{color:#bff7df;background:rgba(72,213,151,.08);border-color:rgba(72,213,151,.22)}
+    .badge.amber{color:#ffe3a1;background:rgba(246,198,91,.08);border-color:rgba(246,198,91,.24)}
+    .badge.red{color:#ffd0d6;background:rgba(255,107,122,.1);border-color:rgba(255,107,122,.28)}
+    .badge.blue{color:#cfe1ff;background:rgba(108,168,255,.08);border-color:rgba(108,168,255,.22)}
+    .empty{padding:32px 18px;text-align:center;color:var(--muted);font-size:14px}
+
+    /* ---------- Forms ---------- */
+    .settings{padding:16px}
+    .settings-grid{display:grid;grid-template-columns:1fr;gap:12px}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .field label{font-size:12px;color:var(--muted);font-weight:600}
+    .field input,.field select,.field textarea{width:100%;min-height:var(--tap);background:#0b1016;border:1px solid #27313d;border-radius:12px;padding:10px 12px;outline:none;font-size:16px}
+    .field input:disabled,.field select:disabled{opacity:.55}
+    .field textarea{min-height:84px;resize:vertical}
+    .field input:focus,.field select:focus,.field textarea:focus,.filter-select:focus{border-color:#5f7186;box-shadow:0 0 0 3px rgba(108,168,255,.12)}
+    .field input[type="file"]{padding:8px}
+    .field input[type="file"]::file-selector-button{border:1px solid #2b3643;border-radius:9px;background:#151d26;color:#e7edf2;padding:7px 10px;margin-right:8px;cursor:pointer}
+    .settings-actions{display:flex;flex-direction:column-reverse;gap:8px;margin-top:16px}
+    .settings-actions button{width:100%}
+    .msg{font-size:14px;padding:10px 12px;border-radius:12px;border:1px solid #27313d;background:#0c1218;color:var(--text-2);line-height:1.4}
     .msg.error{border-color:rgba(255,107,122,.28);color:#ffd8dd;background:rgba(255,107,122,.06)}
     .msg.success{border-color:rgba(72,213,151,.24);color:#caffdf;background:rgba(72,213,151,.05)}
-    .config-note{font-size:11px;color:var(--muted);line-height:1.5;margin-top:12px}
-    .file-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;padding:8px 9px;border:1px solid #25303c;background:#0c1117;border-radius:10px}
-    .file-name{font-size:11px;color:#c9d2dc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .link-btn{border:0;background:transparent;color:#a7c7ff;padding:0;font-size:11px}
-    .member-pill{font-size:11px;color:#cbd5df}
-    .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:6px}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);display:grid;place-items:center;padding:18px;z-index:50}
-    .modal{width:min(640px,100%);max-height:90vh;overflow:auto;padding:20px}
-    .modal h3{margin:0;font-size:19px}
-    .modal-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .icon-btn{width:36px;height:36px;border:1px solid #2a3440;border-radius:10px;background:#111820;color:#fff}
-    .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
-    .modal-grid .full{grid-column:1/-1}
-    .receipt-preview{max-width:100%;border-radius:14px;border:1px solid #26313d;background:#091016;margin-top:8px}
-    .footer-note{margin-top:18px;color:#687686;font-size:10px;text-align:center}
+    .config-note{font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px}
+    .footer-note{margin-top:22px;color:#5d6a79;font-size:11px;text-align:center}
 
-    /* ---------- Navigation / tabs ---------- */
-    .tabs{display:flex;gap:7px;align-items:center;padding:6px;background:#0d131a;border:1px solid var(--border);border-radius:15px;margin:18px 0 6px;overflow:auto}
-    .tab-btn{border:0;background:transparent;color:var(--muted);padding:10px 15px;border-radius:10px;font-size:12px;font-weight:700;white-space:nowrap}
-    .tab-btn:hover{color:#fff;background:#151d27}
-    .tab-btn.active{background:#edf3f7;color:#071017}
+    /* ---------- Auth ---------- */
+    .auth-screen{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:calc(20px + var(--safe-t)) var(--gutter) calc(20px + var(--safe-b))}
+    .auth-card{width:min(420px,100%);padding:22px;border-radius:24px}
+    .auth-card .brand-mark{width:46px;height:46px;flex-basis:46px;border-radius:14px}
+    .auth-card h1{margin:0;font-size:24px;letter-spacing:-.03em}
+    .auth-card p{color:var(--muted);font-size:14px;margin:2px 0 0}
+    .google-btn{width:100%;min-height:50px;font-size:16px}
+
+    /* ---------- Bottom navigation (phones) ---------- */
+    .tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;padding:6px 8px calc(6px + var(--safe-b));
+      background:rgba(10,14,19,.92);backdrop-filter:saturate(1.4) blur(14px);-webkit-backdrop-filter:saturate(1.4) blur(14px);border-top:1px solid var(--border)}
+    .tab-btn{flex:1;min-height:52px;border:0;background:transparent;color:var(--muted);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;font-weight:700}
+    .tab-btn svg{width:22px;height:22px}
+    .tab-btn.active{color:var(--text);background:var(--raised)}
     .tab-panel{display:none}
     .tab-panel.active{display:block}
-    .tab-lock{color:#657385;font-size:11px;margin-left:auto;padding:0 10px;white-space:nowrap}
 
-    /* ---------- Clear event actions ---------- */
-    .event{grid-template-columns:90px minmax(0,1fr) 150px 105px 115px}
-    .event-actions{display:flex;justify-content:flex-end;align-items:center;gap:7px}
-    .event-actions .small-btn{min-width:104px;text-align:center}
-    .event-amount{white-space:nowrap}
+    /* ---------- Sheets (modal on desktop, bottom sheet on phones) ---------- */
+    .modal-backdrop{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.66);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center}
+    .modal{width:100%;max-height:92vh;max-height:92dvh;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px var(--gutter) calc(18px + var(--safe-b));border-radius:24px 24px 0 0;border-bottom:0;animation:sheet-up .22s ease-out}
+    .modal::before{content:"";display:block;width:40px;height:5px;border-radius:999px;background:#323d4a;margin:2px auto 12px}
+    @keyframes sheet-up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+    @media (prefers-reduced-motion:reduce){.modal{animation:none}.progress > span{transition:none}}
+    .modal h3{margin:0;font-size:19px}
+    .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+    .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+    .modal-grid .full{grid-column:1/-1}
+    .sheet-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 0;border-top:1px solid rgba(255,255,255,.06)}
+    .sheet-row:first-of-type{border-top:0}
+    .sheet-row .copy{min-width:0;font-size:14px;color:var(--text-2);line-height:1.4}
+    .sheet-row .copy b{display:block;color:var(--text);font-size:15px}
+    .sheet-actions{display:grid;gap:8px;margin-top:6px}
 
-    /* ---------- Metric note ---------- */
-    .metric .sub.note{max-width:230px;line-height:1.45}
+    /* ---------- Toast ---------- */
+    .toast{position:fixed;left:var(--gutter);right:var(--gutter);bottom:calc(var(--nav-h) + var(--safe-b) + 12px);z-index:60;max-width:520px;margin:0 auto;box-shadow:0 12px 40px rgba(0,0,0,.45)}
 
-    /* ---------- History actions ---------- */
-    .history-table th:last-child,.history-table td:last-child{text-align:right}
-    .history-actions{display:flex;justify-content:flex-end;gap:7px;align-items:center}
-    .history-actions .small-btn{min-width:72px}
-
-    /* ---------- Confirmation modal ---------- */
-    .confirm-copy{color:#cbd4dd;font-size:13px;line-height:1.55;margin-top:12px;white-space:pre-line}
-    .confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
-
-    /* ---------- Better modal field behaviour ---------- */
-    .field input[type="file"]{padding:9px}
-    .field input[type="file"]::file-selector-button{border:1px solid #2b3643;border-radius:9px;background:#151d26;color:#e7edf2;padding:7px 9px;margin-right:8px;cursor:pointer}
-
-    /* ---------- Compact mobile history ---------- */
-    @media (max-width:760px){
-      .tabs{margin-top:14px;position:sticky;top:8px;z-index:20;box-shadow:0 10px 30px rgba(0,0,0,.22)}
-      .tab-lock{display:none}
-      .event{grid-template-columns:1fr;gap:8px;padding:16px}
-      .event-amount{white-space:normal;text-align:left}
-      .event-actions{justify-content:flex-start;flex-wrap:wrap}
-      .event-actions .small-btn{min-width:0}
-      .history-table{min-width:0;width:100%}
-      .history-table thead{display:none}
-      .history-table,.history-table tbody,.history-table tr,.history-table td{display:block}
-      .history-table tr{
-        padding:14px;
-        border-bottom:1px solid rgba(255,255,255,.06);
-      }
-      .history-table td{
-        border:0;
-        padding:5px 0;
-        display:grid;
-        grid-template-columns:105px minmax(0,1fr);
-        gap:10px;
-        text-align:left !important;
-        font-size:12px;
-      }
-      .history-table td::before{
-        content:attr(data-label);
-        color:var(--muted);
-        font-size:10px;
-        text-transform:uppercase;
-        letter-spacing:.08em;
-        font-weight:700;
-      }
-      .history-table td.amount{font-size:15px}
-      .history-actions{justify-content:flex-start}
-      .history-actions .small-btn{min-width:0}
+    /* ---------- Small phones ---------- */
+    @media (max-width:359px){
+      :root{--gutter:12px}
+      .action-amount{font-size:34px}
+      .metric .value{font-size:19px}
+      .modal-grid{grid-template-columns:1fr}
+      .modal-grid .full{grid-column:auto}
     }
 
-    @media (max-width:1100px){
-      .cards-4{grid-template-columns:repeat(2,minmax(0,1fr))}
-      .hero-action{width:290px}
-      .event{grid-template-columns:80px minmax(0,1fr) 140px 110px}
+    /* ---------- Tablet and up ---------- */
+    @media (min-width:640px){
+      :root{--gutter:22px}
+      .metrics{grid-template-columns:repeat(4,minmax(0,1fr))}
       .settings-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-    }
-    @media (max-width:760px){
-      .app-shell{padding:18px 12px 40px}
-      .topbar{align-items:flex-start}
-      .user-name{display:none}
-      .cards-4,.cards-3{grid-template-columns:1fr}
-      .hero{flex-direction:column}
-      .hero-action{width:100%}
-      .hero-title h2{font-size:25px}
-      .event{grid-template-columns:1fr;gap:7px}
-      .event-amount{text-align:left}
-      .badge{justify-self:start}
-      .settings-grid,.modal-grid{grid-template-columns:1fr}
-      .field.full,.modal-grid .full{grid-column:auto}
+      .settings-actions{flex-direction:row;justify-content:flex-end}
+      .settings-actions button{width:auto}
+      .event{grid-template-columns:52px minmax(0,1fr) auto auto;grid-template-areas:"date main side actions";padding:14px 18px}
+      .date-chip{width:52px;align-self:center}
+      .event-actions .small-btn{flex:0 0 auto}
+      .event-actions .link-btn{margin-right:0}
+      .modal-backdrop{align-items:center;padding:24px}
+      .modal{width:min(620px,100%);border-radius:24px;border-bottom:1px solid var(--border);padding:20px 22px 22px}
+      .modal::before{display:none}
+      .toast{bottom:24px}
     }
 
-    /* ---------- Phone layout refinements ---------- */
-    @media (max-width:760px){
-      .app-shell{padding-inline:12px}
-      .topbar{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:18px}
-      .topbar .brand{min-width:0;gap:10px}
-      .topbar .brand-mark{width:40px;height:40px;border-radius:13px;flex:0 0 40px}
-      .topbar .brand-mark span{font-size:14px}
-      .topbar .brand h1{font-size:18px;line-height:1.08;white-space:nowrap}
-      .topbar .brand p{font-size:11px;line-height:1.25}
-      .user-box{justify-content:flex-end;gap:8px}
-      .user-box button{min-height:44px;padding:9px 10px}
-      .ghost-btn,.primary-btn,.danger-btn,.small-btn{min-height:44px}
-
-      .hero{padding:16px;gap:12px}
-      .hero-title h2{font-size:24px;line-height:1.1}
-      .hero-meta{gap:8px 14px;line-height:1.35}
-      .hero-action{padding:15px}
-      .hero-action .amount{font-size:28px}
-
-      .tabs{margin-inline:-2px;padding:4px;gap:3px}
-      .tab-btn{min-height:44px;padding:9px 11px;font-size:11px}
-
-      .section-head{align-items:flex-start;flex-wrap:wrap}
-      .section-head > :first-child{min-width:0;flex:1 1 180px}
-      .section-tools{width:100%;justify-content:stretch}
-      .filter-control{flex:1 1 auto;min-width:0}
-      .filter-control label{display:none}
-      .filter-select{width:100%;min-height:44px;font-size:16px}
-      .section-tools .small-btn{flex:0 0 auto}
-      .metric{min-height:132px;padding:17px}
-      .metric .value{font-size:28px}
-      .metric .sub.note{max-width:none}
-
-      .event{
-        grid-template-columns:82px minmax(0,1fr) auto;
-        grid-template-areas:
-          "date content content"
-          "date amount amount"
-          "date badge actions";
-        gap:6px 12px;
-        padding:15px 14px;
-      }
-      .event .date-col{grid-area:date;align-self:start;padding-top:1px}
-      .event > div:nth-child(2){grid-area:content;min-width:0}
-      .event .event-amount{grid-area:amount;white-space:normal;text-align:left}
-      .event > div:nth-child(4){grid-area:badge;justify-self:start;align-self:center}
-      .event > div:nth-child(4),
-      .event .event-actions{height:44px;display:flex;align-items:center}
-      .event .event-actions{grid-area:actions;justify-content:flex-end;align-self:center}
-      .event-actions .small-btn{min-width:0;padding-inline:10px}
-      .event .badge{height:44px;min-height:44px;display:inline-flex;align-items:center}
-      .event-title{font-size:15px;line-height:1.25}
-      .event-desc{line-height:1.35}
-      .event-amount{font-size:20px}
-      .event-amount small{font-size:11px}
-      .badge{padding:6px 8px}
-
-      .field input,.field select,.field textarea{min-height:44px;font-size:16px}
-      .settings-actions{flex-direction:column-reverse;align-items:stretch}
-      .settings-actions button{width:100%;min-height:44px}
-      .auth-card{padding:20px}
-
-      .modal-backdrop{align-items:start;padding:10px}
-      .modal{padding:16px;border-radius:18px;max-height:calc(100vh - 20px)}
-      .modal-grid{gap:10px;margin-top:14px}
-      .icon-btn{width:44px;height:44px;flex:0 0 44px}
-    }
-
-    @media (max-width:390px){
-      .topbar .brand p{max-width:180px}
-      .ghost-btn{padding-inline:8px}
-      .hero-title{align-items:flex-start}
-      .hero-title .pill{padding:6px 8px}
-      .tabs{overflow-x:auto;scrollbar-width:none}
-      .tabs::-webkit-scrollbar{display:none}
-      .tab-btn{flex:0 0 auto}
-      .event{grid-template-columns:70px minmax(0,1fr) auto;gap:6px 10px}
-      .event-actions .small-btn{font-size:11px}
-    }
-
-    @media (pointer:coarse){
-      .ghost-btn,.primary-btn,.danger-btn,.small-btn,.link-btn,.tab-btn{min-height:44px}
-      .event-actions{gap:8px}
+    /* ---------- Desktop ---------- */
+    @media (min-width:960px){
+      .app-shell{padding-bottom:48px}
+      .tabs{position:sticky;top:calc(64px + var(--safe-t));bottom:auto;margin:16px 0 4px;padding:5px;border:1px solid var(--border);border-radius:15px;width:max-content;background:#0d131a}
+      .tab-btn{flex:0 0 auto;flex-direction:row;min-height:40px;padding:8px 16px;font-size:13px;gap:8px}
+      .tab-btn svg{width:18px;height:18px}
+      .tab-btn.active{background:#edf3f7;color:#071017}
+      .overview-top{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:12px;align-items:stretch}
+      .overview-top .loan-card{display:flex;flex-direction:column;justify-content:space-between}
+      .settings-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
     }
   </style>
 </head>
@@ -336,22 +292,21 @@
 
   <!-- APP -->
   <div id="appScreen" class="hidden">
-    <div class="app-shell">
-      <header class="topbar">
-        <div class="brand">
-          <div class="brand-mark"><span>BYD</span></div>
-          <div>
-            <h1>BYD Loan Tracker</h1>
-            <p id="headerSubtitle">Shared payment dashboard</p>
-          </div>
+    <header class="appbar">
+      <div class="brand">
+        <div class="brand-mark"><span>BYD</span></div>
+        <div class="brand-text">
+          <h1>BYD Loan Tracker</h1>
+          <p id="headerSubtitle">Shared payment dashboard</p>
         </div>
-        <div class="user-box">
-          <div id="userName" class="user-name"></div>
-          <button id="refreshBtn" class="ghost-btn">Refresh</button>
-          <button id="logoutBtn" class="ghost-btn">Sign out</button>
-        </div>
-      </header>
+      </div>
+      <button id="menuBtn" class="avatar-btn" aria-label="Account and notifications">
+        <span id="avatarInitials">·</span>
+        <span id="notifDot" class="notif-dot hidden"></span>
+      </button>
+    </header>
 
+    <div class="app-shell">
       <section id="initErrorPanel" class="panel settings hidden">
         <div class="section-head">
           <div>
@@ -381,7 +336,7 @@
             </div>
             <div class="field">
               <label>Funded amount</label>
-              <input id="sFunded" type="number" step="0.01" value="46066.00" required />
+              <input id="sFunded" type="number" inputmode="decimal" step="0.01" value="46066.00" required />
             </div>
             <div class="field">
               <label>Fortnight cadence</label>
@@ -394,7 +349,7 @@
             </div>
             <div class="field">
               <label>Initial DD amount</label>
-              <input id="sInitialAmount" type="number" step="0.01" value="1017.36" required />
+              <input id="sInitialAmount" type="number" inputmode="decimal" step="0.01" value="1017.36" required />
             </div>
             <div class="field">
               <label>Regular DD start</label>
@@ -403,7 +358,7 @@
 
             <div class="field">
               <label>Regular DD amount</label>
-              <input id="sRegularAmount" type="number" step="0.01" value="678.20" required />
+              <input id="sRegularAmount" type="number" inputmode="decimal" step="0.01" value="678.20" required />
             </div>
             <div class="field">
               <label>Extra payment start</label>
@@ -411,7 +366,7 @@
             </div>
             <div class="field">
               <label>Extra payment amount</label>
-              <input id="sExtraAmount" type="number" step="0.01" value="122.00" required />
+              <input id="sExtraAmount" type="number" inputmode="decimal" step="0.01" value="122.00" required />
             </div>
 
             <div class="field">
@@ -420,7 +375,7 @@
             </div>
             <div class="field">
               <label>Friend payment amount</label>
-              <input id="sFriendAmount" type="number" step="0.01" value="800.00" required />
+              <input id="sFriendAmount" type="number" inputmode="decimal" step="0.01" value="800.00" required />
             </div>
             <div class="field">
               <label>Timezone</label>
@@ -438,141 +393,175 @@
       </section>
 
       <main id="dashboard" class="hidden">
-        <section class="panel hero">
-          <div class="hero-main">
-            <div class="hero-title">
-              <h2 id="vehicleTitle">BYD</h2>
-              <div id="rolePill" class="pill">Member</div>
-            </div>
-            <div class="hero-meta">
-              <div><strong id="fundedMeta">$0.00</strong> funded</div>
-              <div>Shared team <strong id="teamMeta">—</strong></div>
-              <div><span class="status-dot"></span>Realtime enabled</div>
-            </div>
-          </div>
-          <div class="hero-action">
-            <div class="eyebrow">Next manual action</div>
-            <div id="nextActionAmount" class="amount">$0.00</div>
-            <div id="nextActionText" class="due">Loading…</div>
-            <div class="row">
-              <button id="nextActionBtn" class="primary-btn" style="flex:1">Log / review payment</button>
-            </div>
-          </div>
-        </section>
-
         <nav class="tabs" aria-label="Dashboard sections">
-          <button class="tab-btn active" data-tab="overviewTab">Overview</button>
-          <button class="tab-btn" data-tab="historyTab">Payment History</button>
-          <button class="tab-btn" id="settingsTabBtn" data-tab="settingsTab">Loan Settings</button>
-          <span id="tabLock" class="tab-lock">Owner only</span>
+          <button class="tab-btn active" data-tab="overviewTab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span>Overview</span></button>
+          <button class="tab-btn" data-tab="historyTab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg><span>History</span></button>
+          <button class="tab-btn" id="settingsTabBtn" data-tab="settingsTab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span>Settings</span></button>
         </nav>
 
         <section id="overviewTab" class="tab-panel active">
-          <section class="grid cards-4">
+          <div id="overdueBanner" class="alert hidden" role="status">
+            <div class="alert-icon">!</div>
+            <div>
+              <div id="overdueTitle" class="alert-title">Overdue</div>
+              <div id="overdueText" class="alert-text"></div>
+            </div>
+          </div>
+
+          <div class="overview-top">
+            <section id="actionCard" class="panel action-card">
+              <div id="nextActionEyebrow" class="eyebrow">Next payment</div>
+              <div id="nextActionAmount" class="action-amount num">—</div>
+              <div class="action-due"><span id="nextActionText">Loading…</span><span id="nextActionBadge"></span></div>
+              <button id="nextActionBtn" class="primary-btn">Log payment</button>
+              <div id="nextActionSecondary" class="action-secondary hidden"></div>
+            </section>
+
+            <section class="panel loan-card">
+              <div>
+                <div class="loan-top">
+                  <h2 id="vehicleTitle">BYD</h2>
+                  <span id="rolePill" class="pill">Member</span>
+                </div>
+                <div class="loan-meta">
+                  <span><strong id="fundedMeta" class="num">$0.00</strong> funded</span>
+                  <span id="teamMeta">—</span>
+                  <span><span class="status-dot"></span>Live sync</span>
+                </div>
+              </div>
+              <div>
+                <div class="progress" aria-hidden="true"><span id="loanProgress"></span></div>
+                <div class="progress-legend"><span id="progressPaid">0% paid</span><span id="progressLeft"></span></div>
+              </div>
+            </section>
+          </div>
+
+          <section class="metrics">
             <div class="panel metric">
               <div class="label">Paid to financier</div>
-              <div id="metricFinancier" class="value">$0.00</div>
-              <div class="sub">Initial + direct debit + extra payments</div>
-              <div class="glow"></div>
+              <div id="metricFinancier" class="value num">$0.00</div>
+              <div class="sub">Direct debits + extras</div>
             </div>
             <div class="panel metric">
-              <div class="label">Tracked remaining</div>
-              <div id="metricRemaining" class="value">$0.00</div>
-              <div class="sub note">Funded amount minus tracked financier payments. Not the lender's official balance.</div>
-              <div class="glow"></div>
+              <div class="label">Remaining</div>
+              <div id="metricRemaining" class="value num">$0.00</div>
+              <div class="sub">Tracked, not the lender's balance</div>
             </div>
             <div class="panel metric">
               <div class="label">Extra paid</div>
-              <div id="metricExtra" class="value">$0.00</div>
-              <div class="sub">Manual additional payments</div>
-              <div class="glow"></div>
+              <div id="metricExtra" class="value num">$0.00</div>
+              <div class="sub">Manual extra payments</div>
             </div>
             <div class="panel metric">
-              <div class="label">Received from friend</div>
-              <div id="metricFriend" class="value">$0.00</div>
-              <div class="sub">Recorded incoming payments</div>
-              <div class="glow"></div>
+              <div class="label">From friend</div>
+              <div id="metricFriend" class="value num">$0.00</div>
+              <div class="sub">Received so far</div>
             </div>
+          </section>
+
+          <section id="notifPrompt" class="panel notif-card hidden">
+            <div class="bell"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></div>
+            <div class="copy"><b>Get payment alerts</b><span id="notifPromptText">Know when a payment is logged or overdue.</span></div>
+            <button id="notifPromptBtn" class="small-btn">Turn on</button>
           </section>
 
           <section class="section">
             <div class="section-head">
               <div>
-                <h3>Upcoming fortnightly schedule</h3>
+                <h3>Payments</h3>
                 <p id="scheduleSub">—</p>
               </div>
-              <div class="section-tools">
-                <div class="filter-control">
-                  <label for="scheduleFilter">Show</label>
-                  <select id="scheduleFilter" class="filter-select">
-                    <option value="all">All payments</option>
-                    <option value="extra_payment">Extra payments</option>
-                    <option value="friend_payment">Friend payments</option>
-                    <option value="direct_debit">Automatic deductions</option>
-                  </select>
-                </div>
-                <button id="syncScheduleBtn" class="small-btn">Sync schedule</button>
-              </div>
             </div>
-            <div class="panel timeline" id="upcomingList"></div>
+            <div class="section-tools">
+              <div class="filter-control">
+                <label for="scheduleFilter">Show</label>
+                <select id="scheduleFilter" class="filter-select">
+                  <option value="all">All payments</option>
+                  <option value="extra_payment">Extra payments</option>
+                  <option value="friend_payment">Friend payments</option>
+                  <option value="direct_debit">Automatic deductions</option>
+                </select>
+              </div>
+              <button id="syncScheduleBtn" class="small-btn">Sync</button>
+            </div>
+            <div class="panel list" id="upcomingList"></div>
           </section>
         </section>
 
         <section id="historyTab" class="tab-panel">
-          <section class="section">
+          <section class="section" style="margin-top:4px">
             <div class="section-head">
               <div>
                 <h3>Payment history</h3>
-                <p>Shared records. Bank transfer screenshots are attached to the same payment row.</p>
-              </div>
-              <div class="section-tools">
-                <div class="filter-control">
-                  <label for="historyFilter">Show</label>
-                  <select id="historyFilter" class="filter-select">
-                    <option value="all">All payments</option>
-                    <option value="extra_payment">Extra payments</option>
-                    <option value="friend_payment">Friend payments</option>
-                    <option value="direct_debit">Automatic deductions</option>
-                  </select>
-                </div>
-                <button id="logFriendBtn" class="small-btn">Log payment</button>
+                <p>Completed payments. Receipts are attached to each record.</p>
               </div>
             </div>
-            <div class="panel table-wrap">
-              <table class="history-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Type</th>
-                    <th>Method</th>
-                    <th>Paid by</th>
-                    <th>Status</th>
-                    <th>Amount</th>
-                    <th>Proof</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="historyBody"></tbody>
-              </table>
+            <div class="section-tools">
+              <div class="filter-control">
+                <label for="historyFilter">Show</label>
+                <select id="historyFilter" class="filter-select">
+                  <option value="all">All payments</option>
+                  <option value="extra_payment">Extra payments</option>
+                  <option value="friend_payment">Friend payments</option>
+                  <option value="direct_debit">Automatic deductions</option>
+                </select>
+              </div>
+              <button id="logFriendBtn" class="small-btn">Log payment</button>
             </div>
+            <div class="panel list" id="historyBody"></div>
           </section>
         </section>
 
         <section id="settingsTab" class="tab-panel">
-          <section class="section" id="settingsSection">
+          <section class="section" id="settingsSection" style="margin-top:4px">
             <div class="section-head">
               <div>
                 <h3>Loan settings</h3>
-                <p>Changes affect future scheduled items. Existing payment history remains intact.</p>
+                <p>Changes affect future scheduled items. Existing payment history stays intact.</p>
               </div>
             </div>
             <div id="settingsSummary" class="panel settings"></div>
           </section>
         </section>
 
-        <div id="runtimeMsg" class="msg hidden" style="margin-top:16px"></div>
-        <div class="footer-note">BYD Loan Tracker · Single-page frontend · Firebase backend</div>
+        <div class="footer-note">BYD Loan Tracker · Firebase</div>
       </main>
+    </div>
+    <div id="runtimeMsg" class="msg toast hidden" role="status" aria-live="polite"></div>
+  </div>
+
+  <!-- ACCOUNT SHEET -->
+  <div id="accountSheet" class="modal-backdrop hidden">
+    <div class="panel modal" role="dialog" aria-modal="true" aria-labelledby="accountTitle">
+      <div class="modal-head">
+        <div>
+          <h3 id="accountTitle">Account</h3>
+          <div id="accountEmail" class="config-note" style="margin-top:4px"></div>
+        </div>
+        <button id="closeAccountSheet" class="icon-btn" aria-label="Close">×</button>
+      </div>
+
+      <div style="margin-top:8px">
+        <div class="sheet-row">
+          <div class="copy"><b>Notifications</b><span id="notifStatus">Checking…</span></div>
+        </div>
+        <div class="sheet-actions">
+          <button id="notifEnableBtn" class="primary-btn hidden">Turn on notifications</button>
+          <button id="notifTestBtn" class="ghost-btn hidden">Send test notification</button>
+          <button id="notifDisableBtn" class="ghost-btn hidden">Turn off on this device</button>
+        </div>
+        <div id="installHint" class="config-note hidden">
+          On iPhone: tap the Share button in Safari, choose <b>Add to Home Screen</b>, then open BYD Loan from your home screen and turn notifications on there.
+        </div>
+
+        <div class="sheet-row" style="margin-top:10px">
+          <div class="copy"><b>Data</b><span>Everything syncs live between your devices.</span></div>
+        </div>
+        <div class="sheet-actions">
+          <button id="refreshBtn" class="ghost-btn">Refresh data</button>
+          <button id="logoutBtn" class="danger-btn">Sign out</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -584,7 +573,7 @@
           <h3 id="paymentModalTitle">Log payment</h3>
           <div id="paymentModalSubtitle" class="config-note"></div>
         </div>
-        <button id="closePaymentModal" class="icon-btn">×</button>
+        <button id="closePaymentModal" class="icon-btn" aria-label="Close">×</button>
       </div>
 
       <form id="paymentForm">
@@ -600,7 +589,7 @@
           </div>
           <div class="field">
             <label>Amount</label>
-            <input id="pAmount" type="number" step="0.01" required />
+            <input id="pAmount" type="number" inputmode="decimal" step="0.01" required />
           </div>
           <div class="field">
             <label>Payment date</label>
@@ -618,8 +607,8 @@
             <input id="pReference" placeholder="Bank reference / note" />
           </div>
           <div class="field full">
-            <label>Screenshot (bank transfer recommended)</label>
-            <input id="pScreenshot" type="file" accept="image/*,.pdf" />
+            <label>Receipt or screenshot (JPG, PNG, PDF · max 10 MB)</label>
+            <input id="pScreenshot" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" />
           </div>
           <div class="field full">
             <label>Notes</label>
@@ -628,7 +617,7 @@
         </div>
         <div class="settings-actions">
           <button type="button" id="cancelPaymentBtn" class="ghost-btn">Cancel</button>
-          <button type="submit" class="primary-btn">Save payment</button>
+          <button type="submit" id="savePaymentBtn" class="primary-btn">Save payment</button>
         </div>
         <div id="paymentMsg" class="msg hidden" style="margin-top:10px"></div>
       </form>
@@ -665,6 +654,7 @@
       friendCollection: "friend_payments",
       membersCollection: "members",
       receiptsCollection: "receipts",
+      pushSubscriptionsCollection: "push_subscriptions",
 
       // Receipts are stored in Firestore as chunks (each doc must stay < 1 MiB).
       receiptMaxBytes: 10 * 1024 * 1024,
@@ -687,6 +677,7 @@
     // ---------- State ----------
     let currentUser = null;
     let memberNames = {};
+    let members = [];
     let isOwner = false;
     let settings = null;
     let financierRows = [];
@@ -797,6 +788,7 @@
         return isPastOrToday(row.due_date) ? "auto_paid" : "scheduled";
       }
       if (row.status === "skipped" || row.status === "missed") return row.status;
+      if (isDueToday(row.due_date)) return "due";
       if (isPastOrToday(row.due_date)) return "overdue";
       return "scheduled";
     }
@@ -812,6 +804,10 @@
         skipped:["Skipped","amber"]
       };
       const [label, cls] = map[status] || [status, "blue"];
+      return statusBadgeText(cls, label);
+    }
+
+    function statusBadgeText(cls, label) {
       return `<span class="badge ${cls}">${escapeHtml(label)}</span>`;
     }
 
@@ -856,6 +852,14 @@
 
     $("logoutBtn").addEventListener("click", async () => {
       stopRealtime();
+      // A signed-out browser should stop receiving this account's notifications.
+      try {
+        const sub = await currentSubscription();
+        if (sub) {
+          await deleteDoc(rowRef(CONFIG.pushSubscriptionsCollection, await subscriptionId(sub.endpoint)));
+          await sub.unsubscribe();
+        }
+      } catch {}
       try { await signOut(auth); } catch {}
       location.reload();
     });
@@ -881,10 +885,12 @@
 
         if (settings) {
           setInitStep("Loading payment records…");
-          await ensureSchedule({quiet:true});
           await refreshAll();
           subscribeRealtime();
+          // Topping up the year-ahead schedule can be slow; live sync renders new rows when it lands.
+          ensureSchedule({quiet:true}).catch(err => console.warn("Schedule sync failed", err));
         }
+        initNotifications();
       } catch (err) {
         console.error("BYD Loan Tracker initialization error:", err);
         show($("initErrorPanel"));
@@ -914,7 +920,14 @@
         email: String(user.email || "").trim().toLowerCase(),
         name: user.displayName || user.email
       };
-      $("userName").textContent = currentUser.name;
+      renderAccount();
+    }
+
+    function renderAccount() {
+      const initials = String(currentUser.name || currentUser.email).split(/[\s@.]+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+      $("avatarInitials").textContent = initials || "·";
+      $("accountTitle").textContent = currentUser.name || "Account";
+      $("accountEmail").textContent = `${currentUser.email}${isOwner ? " · Owner" : members.length ? " · Friend" : ""}`;
     }
 
     async function loadMembership() {
@@ -937,21 +950,20 @@
 
       const member = memberSnap.data();
       isOwner = member.role === "owner";
-      if (member.name) {
-        currentUser.name = member.name;
-        $("userName").textContent = member.name;
-      }
+      if (member.name) currentUser.name = member.name;
 
       const all = await getDocs(collection(db, CONFIG.membersCollection));
-      memberNames = Object.fromEntries(all.docs.map(d => [d.id, d.data().name || d.id]));
+      members = all.docs.map(d => ({email: d.id, name: d.data().name || d.id, role: d.data().role}));
+      memberNames = Object.fromEntries(members.map(m => [m.email, m.name]));
+      renderAccount();
 
       $("teamMeta").textContent = `${all.size} ${all.size === 1 ? "member" : "members"}`;
       $("rolePill").textContent = isOwner ? "Owner" : "Friend";
       $("settingsSection").style.display = isOwner ? "" : "none";
       $("settingsTabBtn").style.display = isOwner ? "" : "none";
-      $("headerSubtitle").textContent = isOwner
-        ? "Owner · Shared payment dashboard"
-        : "Friend · Shared payment dashboard";
+      // Only the owner may record financier payments (firestore.rules).
+      [...$("pType").options].forEach(o => { o.disabled = !isOwner && o.value !== "friend_payment"; });
+      $("headerSubtitle").textContent = `Hi ${firstName(currentUser.name)} · ${isOwner ? "Owner" : "Friend"}`;
     }
 
     async function loadSettings() {
@@ -1129,65 +1141,170 @@
     }
 
     // ---------- Rendering ----------
+    const MANUAL_TYPES = ["extra_payment", "friend_payment"];
+    const isManual = row => MANUAL_TYPES.includes(row.type);
+    const isOutstanding = row => isManual(row) && ["overdue", "due", "scheduled"].includes(statusForRow(row));
+    const byDue = (a,b) => a.due_date.localeCompare(b.due_date) || typeRank(a.type) - typeRank(b.type);
+    const sumCents = rows => rows.reduce((sum, r) => sum + Number(r.amount_cents || 0), 0);
+    const firstName = name => String(name || "").trim().split(/\s+/)[0] || name;
+
+    function daysFromToday(dateKey) {
+      return Math.round((Date.parse(dateKey + "T00:00:00Z") - Date.parse(todayKey() + "T00:00:00Z")) / 86400000);
+    }
+
+    function relativeDue(dateKey) {
+      const n = daysFromToday(dateKey);
+      if (n === 0) return "due today";
+      if (n === 1) return "due tomorrow";
+      if (n > 1) return `due in ${n} days`;
+      return n === -1 ? "1 day overdue" : `${-n} days overdue`;
+    }
+
+    // Whether the signed-in member may record this payment (matches firestore.rules).
+    function canLog(row) {
+      return isManual(row) && (isOwner || row.type === "friend_payment");
+    }
+
+    function memberName(role) {
+      const m = members.find(m => m.role === role);
+      return m ? firstName(m.name) : (role === "owner" ? "the owner" : "your friend");
+    }
+
     function renderDashboard() {
+      const rows = allRows();
       $("vehicleTitle").textContent = settings.vehicle || "BYD";
       $("fundedMeta").textContent = money(settings.funded_cents);
 
-      const finPaid = financierRows.reduce((sum,r) => {
-        const s = statusForRow(r);
-        return ["paid","auto_paid"].includes(s) ? sum + Number(r.amount_cents||0) : sum;
-      },0);
-
-      const extraPaid = financierRows
-        .filter(r => r.type === "extra_payment")
-        .reduce((sum,r) => statusForRow(r) === "paid" ? sum + Number(r.amount_cents||0) : sum,0);
-
-      const friendReceived = friendRows.reduce((sum,r) =>
-        statusForRow(r) === "paid" ? sum + Number(r.amount_cents||0) : sum,0);
+      const finPaid = sumCents(financierRows.filter(r => ["paid","auto_paid"].includes(statusForRow(r))));
+      const extraPaid = sumCents(financierRows.filter(r => r.type === "extra_payment" && statusForRow(r) === "paid"));
+      const friendReceived = sumCents(friendRows.filter(r => statusForRow(r) === "paid"));
+      const funded = Number(settings.funded_cents || 0);
 
       $("metricFinancier").textContent = money(finPaid);
-      $("metricRemaining").textContent = money(Math.max(0, Number(settings.funded_cents || 0) - finPaid));
+      $("metricRemaining").textContent = money(Math.max(0, funded - finPaid));
       $("metricExtra").textContent = money(extraPaid);
       $("metricFriend").textContent = money(friendReceived);
 
-      const nextManual = [...financierRows, ...friendRows]
-        .filter(r => ["extra_payment","friend_payment"].includes(r.type))
-        .map(r => ({...r, derivedStatus:statusForRow(r)}))
-        .filter(r => !["paid"].includes(r.derivedStatus))
-        .sort((a,b) => a.due_date.localeCompare(b.due_date))[0];
+      const pct = funded ? Math.min(100, finPaid / funded * 100) : 0;
+      $("loanProgress").style.width = pct.toFixed(1) + "%";
+      $("progressPaid").textContent = `${pct.toFixed(1)}% paid`;
+      $("progressLeft").textContent = `${money(Math.max(0, funded - finPaid))} left`;
 
-      if (nextManual) {
-        $("nextActionAmount").textContent = money(nextManual.amount_cents);
-        $("nextActionText").textContent = `${typeLabel(nextManual.type)} · ${formatDate(nextManual.due_date)}`;
-        $("nextActionBtn").onclick = () => {
-          activateTab("historyTab");
-          openPaymentModal(nextManual);
-        };
-      } else {
+      renderActionCard(rows);
+      renderOverdueBanner(rows);
+      renderSchedule(rows);
+      renderHistory(rows);
+      populateSettingsSummary();
+    }
+
+    function renderActionCard(rows) {
+      // Each member sees their own job: the friend sends friend payments,
+      // the owner makes extra payments to the financier.
+      const myType = isOwner ? "extra_payment" : "friend_payment";
+      const mine = rows.filter(r => r.type === myType && isOutstanding(r)).sort(byDue);
+      const overdue = mine.filter(r => statusForRow(r) === "overdue");
+      const next = overdue[0] || mine[0] || null;
+      const to = isOwner ? "the financier" : memberName("owner");
+
+      const card = $("actionCard");
+      card.classList.remove("is-overdue", "is-due", "is-clear");
+
+      if (!next) {
+        card.classList.add("is-clear");
+        $("nextActionEyebrow").textContent = "All caught up";
         $("nextActionAmount").textContent = "$0.00";
-        $("nextActionText").textContent = "No outstanding manual payment";
+        $("nextActionText").textContent = isOwner ? "No extra payment outstanding" : "Nothing to send right now";
+        $("nextActionBadge").innerHTML = "";
+        $("nextActionBtn").textContent = "Log a payment";
         $("nextActionBtn").onclick = () => openPaymentModal();
+      } else if (overdue.length) {
+        card.classList.add("is-overdue");
+        $("nextActionEyebrow").textContent = overdue.length > 1
+          ? `${overdue.length} payments overdue · send to ${to}`
+          : `Overdue · send to ${to}`;
+        $("nextActionAmount").textContent = money(overdue.length > 1 ? sumCents(overdue) : next.amount_cents);
+        $("nextActionText").textContent = overdue.length > 1
+          ? `Oldest was due ${formatDate(next.due_date)}`
+          : `${typeLabel(next.type)} · due ${formatDate(next.due_date)}`;
+        $("nextActionBadge").innerHTML = statusBadgeText("red", relativeDue(next.due_date));
+        $("nextActionBtn").textContent = overdue.length > 1 ? `Log ${formatDate(next.due_date,{year:false})} payment` : "Log payment";
+        $("nextActionBtn").onclick = () => openPaymentModal(next);
+      } else {
+        const today = isDueToday(next.due_date);
+        if (today) card.classList.add("is-due");
+        $("nextActionEyebrow").textContent = today
+          ? `Due today · send to ${to}`
+          : (isOwner ? "Your next extra payment" : `Next payment to ${to}`);
+        $("nextActionAmount").textContent = money(next.amount_cents);
+        $("nextActionText").textContent = `${dayLabel(next.due_date)} ${formatDate(next.due_date)}`;
+        $("nextActionBadge").innerHTML = statusBadgeText(today ? "amber" : "blue", relativeDue(next.due_date));
+        $("nextActionBtn").textContent = "Log payment";
+        $("nextActionBtn").onclick = () => openPaymentModal(next);
       }
 
-      const horizon = addDays(todayKey(), 120);
-      const upcoming = [...financierRows, ...friendRows]
-        .filter(r => compareDate(r.due_date, todayKey()) >= 0 && compareDate(r.due_date, horizon) <= 0)
-        .filter(r => matchesPaymentFilter(r, scheduleFilter))
-        .sort((a,b) => a.due_date.localeCompare(b.due_date) || typeRank(a.type)-typeRank(b.type));
+      // The owner also needs to know whether the friend is behind.
+      const secondary = $("nextActionSecondary");
+      if (isOwner) {
+        const fromFriend = rows.filter(r => r.type === "friend_payment" && isOutstanding(r)).sort(byDue);
+        const friendLate = fromFriend.filter(r => statusForRow(r) === "overdue");
+        const friend = memberName("friend");
+        secondary.textContent = friendLate.length
+          ? `${friend} is behind: ${money(sumCents(friendLate))} overdue (${friendLate.length} ${friendLate.length === 1 ? "payment" : "payments"}).`
+          : fromFriend[0]
+            ? `Next from ${friend}: ${money(fromFriend[0].amount_cents)} on ${formatDate(fromFriend[0].due_date)}.`
+            : `${friend} is all caught up.`;
+        show(secondary);
+      } else {
+        hide(secondary);
+      }
+    }
 
-      $("scheduleSub").textContent = `${upcoming.length} ${upcoming.length === 1 ? "event" : "events"} in the next 120 days`;
-      $("upcomingList").innerHTML = upcoming.length ? upcoming.map(renderEvent).join("") :
-        `<div class="empty">No upcoming ${scheduleFilter === "all" ? "events" : typeLabel(scheduleFilter).toLowerCase() + "s"} in this period.</div>`;
+    function renderOverdueBanner(rows) {
+      const overdue = rows
+        .filter(r => statusForRow(r) === "overdue" && (isOwner || r.type === "friend_payment"))
+        .sort(byDue);
+      if (!overdue.length) return hide($("overdueBanner"));
+      $("overdueTitle").textContent = `${overdue.length} overdue ${overdue.length === 1 ? "payment" : "payments"} · ${money(sumCents(overdue))}`;
+      $("overdueText").textContent = overdue.slice(0, 3)
+        .map(r => `${typeLabel(r.type)} ${formatDate(r.due_date,{year:false})} (${relativeDue(r.due_date)})`)
+        .join(" · ") + (overdue.length > 3 ? ` · +${overdue.length - 3} more` : "");
+      show($("overdueBanner"));
+    }
 
-      const history = [...financierRows, ...friendRows]
-        .filter(r => compareDate(r.due_date, todayKey()) <= 0 || statusForRow(r) === "paid")
+    function renderSchedule(rows) {
+      const today = todayKey();
+      const horizon = addDays(today, 120);
+      const visible = rows.filter(r => matchesPaymentFilter(r, scheduleFilter));
+      const overdue = visible.filter(r => statusForRow(r) === "overdue").sort(byDue);
+      const dueToday = visible.filter(r => r.due_date === today).sort(byDue);
+      const upcoming = visible
+        .filter(r => compareDate(r.due_date, today) > 0 && compareDate(r.due_date, horizon) <= 0)
+        .sort(byDue);
+
+      const parts = [];
+      if (overdue.length) parts.push(`${overdue.length} overdue`);
+      if (dueToday.length) parts.push(`${dueToday.length} today`);
+      parts.push(`${upcoming.length} in the next 120 days`);
+      $("scheduleSub").textContent = parts.join(" · ");
+
+      // Offer "Log early" only on the next upcoming payment this member is responsible for.
+      const nextMine = upcoming.find(r => canLog(r) && isOutstanding(r) && (isOwner ? r.type === "extra_payment" : true));
+      const group = (cls, label, list) => list.length
+        ? `<div class="group-label ${cls}"><span>${label}</span><span class="num">${list.length}</span></div>${list.map(r => renderEvent(r, r === nextMine)).join("")}`
+        : "";
+      const html = group("overdue", "Overdue", overdue) + group("today", "Today", dueToday) + group("", "Upcoming", upcoming);
+      $("upcomingList").innerHTML = html ||
+        `<div class="empty">No ${scheduleFilter === "all" ? "payments" : typeLabel(scheduleFilter).toLowerCase() + "s"} in this period.</div>`;
+    }
+
+    function renderHistory(rows) {
+      // History is what has happened. Unpaid overdue items live on the overview.
+      const history = rows
+        .filter(r => ["paid", "auto_paid", "skipped", "missed"].includes(statusForRow(r)))
         .filter(r => matchesPaymentFilter(r, historyFilter))
-        .sort((a,b) => b.due_date.localeCompare(a.due_date));
-
+        .sort((a,b) => (b.paid_date || b.due_date).localeCompare(a.paid_date || a.due_date) || typeRank(a.type) - typeRank(b.type));
       $("historyBody").innerHTML = history.length ? history.map(renderHistoryRow).join("") :
-        `<tr><td colspan="8"><div class="empty">No ${historyFilter === "all" ? "payment history" : typeLabel(historyFilter).toLowerCase() + " history"} found.</div></td></tr>`;
-
-      populateSettingsSummary();
+        `<div class="empty">No ${historyFilter === "all" ? "payment history" : typeLabel(historyFilter).toLowerCase() + " history"} yet.</div>`;
     }
 
     function typeRank(type) {
@@ -1199,57 +1316,78 @@
       }[type] || 9;
     }
 
-    function renderEvent(row) {
+    function dateChip(dateKey) {
+      const d = new Date(dateKey + "T00:00:00Z");
+      const day = String(d.getUTCDate()).padStart(2, "0");
+      const mon = new Intl.DateTimeFormat("en-AU", {month:"short", timeZone:"UTC"}).format(d);
+      return `<div class="date-chip"><b>${day}</b><span>${escapeHtml(mon)}</span></div>`;
+    }
+
+    function rowAction(row, label) {
+      return `<button class="small-btn" onclick="openPaymentModalById('${escapeHtml(row.$id)}','${escapeHtml(row.type)}')">${label}</button>`;
+    }
+
+    function renderEvent(row, offerEarly=false) {
       const st = statusForRow(row);
-      const manual = row.type === "extra_payment" || row.type === "friend_payment";
-      const dueNow = manual && isDueToday(row.due_date) && st !== "paid";
+      const manual = isManual(row);
+      const desc = {
+        initial_direct_debit: "Automatic direct debit",
+        direct_debit: "Automatic direct debit",
+        extra_payment: `Manual payment to the financier${isOwner ? "" : " (owner)"}`,
+        friend_payment: isOwner ? `From ${memberName("friend")}` : `You send to ${memberName("owner")}`
+      }[row.type] || "";
+      const when = manual && ["overdue","due"].includes(st) ? ` · ${relativeDue(row.due_date)}` : "";
 
       let action = "";
-      if (manual && st !== "paid") {
-        action = `<button class="small-btn" onclick="openPaymentModalById('${escapeHtml(row.$id)}','${escapeHtml(row.type)}')">${dueNow ? "Log payment" : "Log when paid"}</button>`;
-      } else if (manual && st === "paid" && isOwner) {
-        action = `<button class="small-btn" onclick="openPaymentModalById('${escapeHtml(row.$id)}','${escapeHtml(row.type)}')">Edit payment</button>`;
-      }
+      if (canLog(row) && (st === "overdue" || st === "due")) action = rowAction(row, "Log payment");
+      else if (canLog(row) && st === "scheduled" && offerEarly) action = rowAction(row, "Log early");
+      else if (manual && st === "paid" && isOwner) action = rowAction(row, "Edit");
 
       return `
-        <div class="event">
-          <div class="date-col">${escapeHtml(formatDate(row.due_date,{year:false}))}<span>${escapeHtml(dayLabel(row.due_date))}</span></div>
-          <div>
+        <article class="event${st === "overdue" ? " is-overdue" : st === "due" ? " is-today" : ""}">
+          ${dateChip(row.due_date)}
+          <div class="event-main">
             <div class="event-title">${escapeHtml(typeLabel(row.type))}</div>
-            <div class="event-desc">${escapeHtml(row.type === "direct_debit" ? "Scheduled financier direct debit" : row.type === "extra_payment" ? "Manual additional payment" : "Incoming payment from friend")}</div>
+            <div class="event-desc">${escapeHtml(desc + when)}</div>
           </div>
-          <div class="event-amount">${money(row.amount_cents)}<small>${manual ? (row.payment_method ? methodLabel(row.payment_method) : "Manual") : "Automatic DD"}</small></div>
-          <div>${statusBadge(dueNow ? "due" : st)}</div>
+          <div class="event-side">
+            <div class="event-amount num">${money(row.amount_cents)}</div>
+            ${statusBadge(st)}
+          </div>
           <div class="event-actions">${action}</div>
-        </div>
+        </article>
       `;
     }
 
     function renderHistoryRow(row) {
       const st = statusForRow(row);
-      const paidBy = paidByLabel(row.paid_by, row.type);
+      const date = row.paid_date || row.due_date;
+      const method = row.type.includes("direct_debit") ? "Automatic" : (row.payment_method ? methodLabel(row.payment_method) : "");
+      const details = [
+        method,
+        row.paid_by ? `by ${paidByLabel(row.paid_by, row.type)}` : "",
+        row.paid_date && row.paid_date !== row.due_date ? `due ${formatDate(row.due_date)}` : formatDate(date),
+        row.reference ? `ref ${row.reference}` : ""
+      ].filter(Boolean).join(" · ");
+
       const proof = row.proof_file_id
         ? `<button class="link-btn" onclick="openReceipt('${escapeHtml(row.proof_file_id)}')">View receipt</button>`
-        : "—";
-
-      const canEdit = isOwner && st !== "scheduled";
-      const action = canEdit
-        ? `<button class="small-btn" onclick="openPaymentModalById('${escapeHtml(row.$id)}','${escapeHtml(row.type)}')">Edit</button>`
-        : "—";
+        : "";
+      const edit = isOwner && isManual(row) ? rowAction(row, "Edit") : "";
 
       return `
-        <tr>
-          <td data-label="Date">${escapeHtml(formatDate(row.due_date))}</td>
-          <td data-label="Type">${escapeHtml(typeLabel(row.type))}</td>
-          <td data-label="Method">${escapeHtml(row.payment_method ? methodLabel(row.payment_method) : (row.type.includes("direct_debit") ? "Direct debit" : "—"))}</td>
-          <td data-label="Paid by">${escapeHtml(paidBy)}</td>
-          <td data-label="Status">${statusBadge(st)}</td>
-          <td data-label="Amount" class="amount">${money(row.amount_cents)}</td>
-          <td data-label="Proof">${proof}</td>
-          <td data-label="Actions">
-            <div class="history-actions">${action}</div>
-          </td>
-        </tr>
+        <article class="event">
+          ${dateChip(date)}
+          <div class="event-main">
+            <div class="event-title">${escapeHtml(typeLabel(row.type))}</div>
+            <div class="event-desc">${escapeHtml(details)}</div>
+          </div>
+          <div class="event-side">
+            <div class="event-amount num">${money(row.amount_cents)}</div>
+            ${statusBadge(st)}
+          </div>
+          <div class="event-actions">${proof}${edit}</div>
+        </article>
       `;
     }
 
@@ -1259,19 +1397,19 @@
         <form id="editSettingsForm">
           <div class="settings-grid">
             <div class="field"><label>Vehicle</label><input id="eVehicle" value="${escapeHtml(settings.vehicle)}"></div>
-            <div class="field"><label>Funded amount</label><input id="eFunded" type="number" step="0.01" value="${(settings.funded_cents/100).toFixed(2)}"></div>
+            <div class="field"><label>Funded amount</label><input id="eFunded" type="number" inputmode="decimal" step="0.01" value="${(settings.funded_cents/100).toFixed(2)}"></div>
             <div class="field"><label>Cadence days</label><input id="eCadence" type="number" min="1" value="${settings.cadence_days}"></div>
 
             <div class="field"><label>Initial DD date</label><input id="eInitialDate" type="date" value="${settings.initial_dd_date}"></div>
-            <div class="field"><label>Initial DD amount</label><input id="eInitialAmount" type="number" step="0.01" value="${(settings.initial_dd_cents/100).toFixed(2)}"></div>
+            <div class="field"><label>Initial DD amount</label><input id="eInitialAmount" type="number" inputmode="decimal" step="0.01" value="${(settings.initial_dd_cents/100).toFixed(2)}"></div>
             <div class="field"><label>Regular DD start</label><input id="eRegularStart" type="date" value="${settings.regular_dd_start}"></div>
 
-            <div class="field"><label>Regular DD amount</label><input id="eRegularAmount" type="number" step="0.01" value="${(settings.regular_dd_cents/100).toFixed(2)}"></div>
+            <div class="field"><label>Regular DD amount</label><input id="eRegularAmount" type="number" inputmode="decimal" step="0.01" value="${(settings.regular_dd_cents/100).toFixed(2)}"></div>
             <div class="field"><label>Extra start</label><input id="eExtraStart" type="date" value="${settings.extra_start}"></div>
-            <div class="field"><label>Extra amount</label><input id="eExtraAmount" type="number" step="0.01" value="${(settings.extra_cents/100).toFixed(2)}"></div>
+            <div class="field"><label>Extra amount</label><input id="eExtraAmount" type="number" inputmode="decimal" step="0.01" value="${(settings.extra_cents/100).toFixed(2)}"></div>
 
             <div class="field"><label>Friend first due</label><input id="eFriendStart" type="date" value="${settings.friend_start}"></div>
-            <div class="field"><label>Friend amount</label><input id="eFriendAmount" type="number" step="0.01" value="${(settings.friend_cents/100).toFixed(2)}"></div>
+            <div class="field"><label>Friend amount</label><input id="eFriendAmount" type="number" inputmode="decimal" step="0.01" value="${(settings.friend_cents/100).toFixed(2)}"></div>
             <div class="field"><label>Timezone</label><input id="eTimezone" value="${escapeHtml(settings.timezone)}"></div>
           </div>
           <div class="settings-actions">
@@ -1517,23 +1655,27 @@
       $("paymentModalTitle").textContent = typeLabel(type);
     });
 
-    $("logFriendBtn").addEventListener("click", () => openPaymentModal({type:"friend_payment"}));
+    $("logFriendBtn").addEventListener("click", () => openPaymentModal());
 
     function openPaymentModal(row=null) {
-      currentModalRow = row || null;
+      // Only rows that exist in Firestore are updated; anything else creates a new record.
+      currentModalRow = row?.$id ? row : null;
       show($("paymentModal"));
       setMsg($("paymentMsg"), "");
 
-      const isExisting = Boolean(row);
-      const isDirectDebit = row?.type === "direct_debit" || row?.type === "initial_direct_debit";
+      const isExisting = Boolean(currentModalRow);
+      const isPaid = isExisting && ["paid", "auto_paid"].includes(row.status);
+      const type = row?.type || (isOwner ? "extra_payment" : "friend_payment");
+      const isDirectDebit = type === "direct_debit" || type === "initial_direct_debit";
 
-      $("pType").value = row?.type || "friend_payment";
+      $("pType").value = type;
       $("pType").disabled = isExisting;
-      $("pDate").value = row?.paid_date || row?.due_date || todayKey();
-      $("pAmount").value = ((row?.amount_cents ?? (row?.type === "extra_payment" ? settings.extra_cents : settings.friend_cents))/100).toFixed(2);
-      $("pMethod").value = row?.payment_method || "bank_transfer";
+      // Unpaid rows default to today's date: that is when the money actually moves.
+      $("pDate").value = isPaid ? (row.paid_date || row.due_date) : todayKey();
+      $("pAmount").value = ((row?.amount_cents ?? (type === "extra_payment" ? settings.extra_cents : settings.friend_cents))/100).toFixed(2);
+      $("pMethod").value = row?.payment_method && row.payment_method !== "direct_debit" ? row.payment_method : "bank_transfer";
       $("pReference").value = row?.reference || "";
-      $("pNotes").value = row?.notes || "";
+      $("pNotes").value = isPaid ? (row?.notes || "") : "";
       $("pScreenshot").value = "";
 
       // Direct debits are not manual receipts.
@@ -1541,16 +1683,13 @@
       if (isDirectDebit) $("pMethod").value = "direct_debit";
       $("pScreenshot").disabled = isDirectDebit;
 
-      $("paymentModalTitle").textContent =
-        isExisting
-          ? (row?.type === "friend_payment" ? "Edit friend payment" :
-             row?.type === "extra_payment" ? "Edit extra payment" :
-             "Edit financier payment")
-          : "Log payment";
+      $("paymentModalTitle").textContent = isPaid
+        ? `Edit ${typeLabel(type).toLowerCase()}`
+        : `Log ${typeLabel(type).toLowerCase()}`;
 
-      $("paymentModalSubtitle").textContent = row?.due_date
-        ? `${typeLabel(row.type)} · ${formatDate(row.due_date)}${isExisting ? " · edit existing record" : ""}`
-        : "Create or update the shared payment record.";
+      $("paymentModalSubtitle").textContent = isExisting
+        ? `Due ${formatDate(row.due_date)}${isPaid ? " · editing a paid record" : ` · ${relativeDue(row.due_date)}`}`
+        : "Record a payment that isn't on the schedule.";
     }
 
     window.openPaymentModalById = function(id, type) {
@@ -1575,6 +1714,7 @@
         const reference = $("pReference").value.trim();
         const notes = $("pNotes").value.trim();
         const file = $("pScreenshot").files[0] || null;
+        $("savePaymentBtn").disabled = true;
 
         if (!date || amountCents <= 0) throw new Error("Enter a valid date and amount.");
 
@@ -1608,12 +1748,15 @@
         if (!isDirectDebitType) data.proof_file_id = proofFileId;
 
         const collectionId = type === "friend_payment" ? CONFIG.friendCollection : CONFIG.financierCollection;
+        let docId = row?.$id;
         if (row) {
           await updatePayment(row, collectionId, data);
         } else {
           // A friend/extra payment with no matching scheduled row gets its own record.
           const cycleKey = `${type === "friend_payment" ? "friend-paid" : "extra-paid"}-${date}-${currentUser.$id.slice(0,8)}`;
-          await setDoc(doc(collection(db, collectionId)), {
+          const newRef = doc(collection(db, collectionId));
+          docId = newRef.id;
+          await setDoc(newRef, {
             cycle_key:cycleKey,
             due_date:date,
             type,
@@ -1631,10 +1774,13 @@
         }
 
         closePaymentModal();
+        notifyMembers(collectionId, docId);
         await refreshAll();
         setRuntime(`${typeLabel(type)} recorded as paid.`);
       } catch(err) {
         setMsg($("paymentMsg"), readableError(err), "error");
+      } finally {
+        $("savePaymentBtn").disabled = false;
       }
     });
 
@@ -1758,6 +1904,7 @@
         btn.classList.add("active");
         const panel = document.getElementById(btn.dataset.tab);
         if (panel) panel.classList.add("active");
+        window.scrollTo({top:0});
       });
     });
 
@@ -1803,10 +1950,14 @@
       }
     });
 
+    let toastTimer = null;
     function setRuntime(text, error=false) {
       const el = $("runtimeMsg");
-      setMsg(el, text, error ? "error" : "success");
+      setMsg(el, text, (error ? "error" : "success") + " toast");
+      clearTimeout(toastTimer);
+      if (text) toastTimer = setTimeout(() => hide(el), error ? 8000 : 3500);
     }
+    $("runtimeMsg").addEventListener("click", () => hide($("runtimeMsg")));
 
     function readableError(err) {
       if (!err) return "Unknown error.";
@@ -1820,6 +1971,165 @@
       if (err.code === "auth/unauthorized-domain") return "This domain is not authorized for sign-in in Firebase Authentication settings.";
       return err.message || "Request failed.";
     }
+
+    // ---------- Account sheet ----------
+    $("menuBtn").addEventListener("click", () => { show($("accountSheet")); refreshNotificationUi(); });
+    $("closeAccountSheet").addEventListener("click", () => hide($("accountSheet")));
+    $("accountSheet").addEventListener("click", e => { if (e.target === $("accountSheet")) hide($("accountSheet")); });
+    document.addEventListener("keydown", e => {
+      if (e.key !== "Escape") return;
+      hide($("accountSheet"));
+      if (!$("paymentModal").classList.contains("hidden")) closePaymentModal();
+    });
+
+    // ---------- Notifications ----------
+    // Web Push: the service worker receives pushes sent by /api/notify (when a
+    // payment is logged) and /api/cron-reminders (daily overdue / due reminders).
+    const pushSupported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+    let swRegistration = null;
+
+    async function subscriptionId(endpoint) {
+      const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(endpoint));
+      return [...new Uint8Array(hash)].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 40);
+    }
+
+    function urlBase64ToUint8Array(base64) {
+      const padded = (base64 + "=".repeat((4 - base64.length % 4) % 4)).replace(/-/g, "+").replace(/_/g, "/");
+      return Uint8Array.from(atob(padded), c => c.charCodeAt(0));
+    }
+
+    async function saveSubscription(sub) {
+      const json = sub.toJSON();
+      await setDoc(rowRef(CONFIG.pushSubscriptionsCollection, await subscriptionId(json.endpoint)), {
+        email: currentUser.email,
+        subscription: {endpoint: json.endpoint, keys: {p256dh: json.keys.p256dh, auth: json.keys.auth}},
+        user_agent: navigator.userAgent.slice(0, 300),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }, {merge: true});
+    }
+
+    async function currentSubscription() {
+      if (!swRegistration) return null;
+      return swRegistration.pushManager.getSubscription();
+    }
+
+    async function initNotifications() {
+      if (!pushSupported) return refreshNotificationUi();
+      try {
+        swRegistration = await navigator.serviceWorker.register("/sw.js", {scope: "/"});
+        // Re-save an existing subscription so it stays linked to this account.
+        const sub = await currentSubscription();
+        if (sub && Notification.permission === "granted") await saveSubscription(sub);
+      } catch (err) {
+        console.warn("Service worker registration failed", err);
+      }
+      refreshNotificationUi();
+    }
+
+    async function enableNotifications() {
+      try {
+        if (!swRegistration) throw new Error("Notifications are not available in this browser.");
+        const permission = await Notification.requestPermission();
+        if (permission !== "granted") throw new Error("Notifications were not allowed. You can enable them in your browser's site settings.");
+        const res = await fetch("/api/push-config");
+        if (!res.ok) throw new Error("Notification service is not configured yet.");
+        const {publicKey} = await res.json();
+        const sub = (await currentSubscription()) || await swRegistration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey)
+        });
+        await saveSubscription(sub);
+        setRuntime("Notifications are on for this device.");
+      } catch (err) {
+        setRuntime(readableError(err), true);
+      }
+      refreshNotificationUi();
+    }
+
+    async function disableNotifications() {
+      try {
+        const sub = await currentSubscription();
+        if (sub) {
+          await deleteDoc(rowRef(CONFIG.pushSubscriptionsCollection, await subscriptionId(sub.endpoint)));
+          await sub.unsubscribe();
+        }
+        setRuntime("Notifications are off for this device.");
+      } catch (err) {
+        setRuntime(readableError(err), true);
+      }
+      refreshNotificationUi();
+    }
+
+    async function callNotifyApi(body) {
+      const token = await auth.currentUser.getIdToken();
+      const res = await fetch("/api/notify", {
+        method: "POST",
+        headers: {"Content-Type": "application/json", "Authorization": `Bearer ${token}`},
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || `Notification request failed (${res.status}).`);
+      return res.json();
+    }
+
+    // Fire-and-forget: tell the other member a payment was logged.
+    function notifyMembers(collectionId, docId) {
+      if (!docId) return;
+      callNotifyApi({collection: collectionId, docId}).catch(err => console.warn("notify failed", err));
+    }
+
+    async function sendTestNotification() {
+      try {
+        const result = await callNotifyApi({test: true});
+        setRuntime(result.sent ? "Test notification sent." : "No devices are subscribed yet.", !result.sent);
+      } catch (err) {
+        setRuntime(readableError(err), true);
+      }
+    }
+
+    async function refreshNotificationUi() {
+      const status = $("notifStatus");
+      const [enableBtn, testBtn, disableBtn] = [$("notifEnableBtn"), $("notifTestBtn"), $("notifDisableBtn")];
+      [enableBtn, testBtn, disableBtn].forEach(hide);
+      hide($("installHint"));
+
+      let state;
+      if (isIos && !isStandalone) state = "install";
+      else if (!pushSupported) state = "unsupported";
+      else if (Notification.permission === "denied") state = "blocked";
+      else state = (Notification.permission === "granted" && await currentSubscription()) ? "on" : "off";
+
+      status.textContent = {
+        install: "On iPhone, add this app to your Home Screen first.",
+        unsupported: "This browser does not support notifications.",
+        blocked: "Blocked. Allow notifications for this site in your browser settings.",
+        on: "On for this device. You'll hear about new payments and anything overdue.",
+        off: "Off. Turn on to hear about new payments and overdue reminders."
+      }[state];
+      if (state === "install") show($("installHint"));
+      if (state === "off") show(enableBtn);
+      if (state === "on") { show(testBtn); show(disableBtn); }
+
+      const prompt = state === "off" || state === "install";
+      $("notifDot").classList.toggle("hidden", !prompt);
+      $("notifPrompt").classList.toggle("hidden", !prompt || localStorageGet("notifPromptDismissed") === "1");
+      $("notifPromptText").textContent = state === "install"
+        ? "Add BYD Loan to your Home Screen to get alerts."
+        : "Know when a payment is logged or overdue.";
+      $("notifPromptBtn").textContent = state === "install" ? "How" : "Turn on";
+    }
+
+    function localStorageGet(key) { try { return localStorage.getItem(key); } catch { return null; } }
+
+    $("notifEnableBtn").addEventListener("click", enableNotifications);
+    $("notifDisableBtn").addEventListener("click", disableNotifications);
+    $("notifTestBtn").addEventListener("click", sendTestNotification);
+    $("notifPromptBtn").addEventListener("click", () => {
+      if (isIos && !isStandalone) { show($("accountSheet")); refreshNotificationUi(); }
+      else enableNotifications();
+    });
 
     // ---------- Startup ----------
     let booted = false;

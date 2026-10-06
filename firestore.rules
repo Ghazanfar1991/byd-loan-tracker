@@ -43,6 +43,36 @@ service cloud.firestore {
       allow read, write: if isMember();
     }
 
+    // Web Push subscriptions, one per browser (id = first 40 hex chars of
+    // SHA-256 of the endpoint). Each member sees only their own; the server
+    // reads them with the Admin SDK. Saving an existing id re-links that
+    // browser to whoever is signed in on it now.
+    function myEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function validSubscription(subId) {
+      let data = request.resource.data;
+      return subId.matches('[0-9a-f]{40}')
+        && data.keys().hasAll(['email', 'subscription'])
+        && data.keys().hasOnly(['email', 'subscription', 'user_agent', 'created_at', 'updated_at'])
+        && data.email == myEmail()
+        && data.subscription is map
+        && data.subscription.keys().hasOnly(['endpoint', 'keys'])
+        && data.subscription.endpoint is string
+        && data.subscription.endpoint.matches('https://.+')
+        && data.subscription.endpoint.size() <= 1024
+        && data.subscription['keys'].keys().hasOnly(['p256dh', 'auth'])
+        && data.subscription['keys'].p256dh is string
+        && data.subscription['keys'].auth is string;
+    }
+
+    match /push_subscriptions/{subId} {
+      allow get, delete: if isMember() && (resource == null || resource.data.email == myEmail());
+      allow list: if isMember() && resource.data.email == myEmail();
+      allow create, update: if isMember() && validSubscription(subId);
+    }
+
     // Receipts are stored as Firestore documents split into <1 MiB chunks,
     // so no Cloud Storage bucket (and no Blaze plan) is needed.
     match /receipts/{fileId} {

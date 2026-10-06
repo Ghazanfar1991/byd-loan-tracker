@@ -1,5 +1,8 @@
-node_modules/
-dist/
-.env
+*-sa.json
+*.pem
 .DS_Store
+.env
+.env*
 appwrite-export/
+dist/
+node_modules/
