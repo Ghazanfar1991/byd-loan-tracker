@@ -6,8 +6,6 @@
   <meta name="theme-color" content="#0b0f14" />
   <title>BYD Loan Tracker</title>
 
-  <!-- Appwrite Web SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@21.2.1"></script>
 
   <style>
     :root{
@@ -113,9 +111,7 @@
     .auth-card{width:min(460px,100%);padding:26px;border-radius:26px}
     .auth-card h1{margin:0;font-size:28px;letter-spacing:-.04em}
     .auth-card p{color:var(--muted);font-size:13px;line-height:1.55}
-    .auth-tabs{display:flex;gap:6px;background:#0b1016;border:1px solid #222b36;padding:5px;border-radius:14px;margin:20px 0}
-    .auth-tab{flex:1;background:transparent;border:0;color:var(--muted);padding:10px;border-radius:10px}
-    .auth-tab.active{background:#18212b;color:#fff}
+    .google-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%}
     .stack{display:grid;gap:10px}
     .msg{font-size:12px;padding:10px 12px;border-radius:12px;border:1px solid #27313d;background:#0c1218;color:#cbd5df}
     .msg.error{border-color:rgba(255,107,122,.28);color:#ffd8dd;background:rgba(255,107,122,.06)}
@@ -286,8 +282,6 @@
       .settings-actions{flex-direction:column-reverse;align-items:stretch}
       .settings-actions button{width:100%;min-height:44px}
       .auth-card{padding:20px}
-      .auth-tabs,.auth-tab{min-height:44px}
-      .auth-tab{padding:10px 8px}
 
       .modal-backdrop{align-items:start;padding:10px}
       .modal{padding:16px;border-radius:18px;max-height:calc(100vh - 20px)}
@@ -308,7 +302,7 @@
     }
 
     @media (pointer:coarse){
-      .ghost-btn,.primary-btn,.danger-btn,.small-btn,.link-btn,.auth-tab,.tab-btn{min-height:44px}
+      .ghost-btn,.primary-btn,.danger-btn,.small-btn,.link-btn,.tab-btn{min-height:44px}
       .event-actions{gap:8px}
     }
   </style>
@@ -326,30 +320,16 @@
         </div>
       </div>
 
-      <div class="auth-tabs">
-        <button id="loginTab" class="auth-tab active">Sign in</button>
-        <button id="signupTab" class="auth-tab">Create account</button>
+      <div class="stack" style="margin-top:20px">
+        <button id="authSubmit" class="primary-btn google-btn" type="button">
+          <svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+          Sign in with Google
+        </button>
+        <div id="authMsg" class="msg hidden"></div>
       </div>
 
-      <form id="authForm" class="stack">
-        <div class="field" id="nameField" style="display:none">
-          <label>Name</label>
-          <input id="authName" type="text" autocomplete="name" placeholder="Your name" />
-        </div>
-        <div class="field">
-          <label>Email</label>
-          <input id="authEmail" type="email" autocomplete="email" required placeholder="you@example.com" />
-        </div>
-        <div class="field">
-          <label>Password</label>
-          <input id="authPassword" type="password" autocomplete="current-password" minlength="8" required placeholder="Minimum 8 characters" />
-        </div>
-        <button id="authSubmit" class="primary-btn" type="submit">Sign in</button>
-        <div id="authMsg" class="msg hidden"></div>
-      </form>
-
       <div class="config-note">
-        Your Appwrite credentials are configured in the HTML's CONFIG section. No API key is used in the browser.
+        Only the two invited Google accounts can open the loan data.
       </div>
     </div>
   </div>
@@ -382,7 +362,7 @@
         </div>
         <div id="initErrorText" class="msg error" style="white-space:pre-wrap"></div>
         <div class="config-note" style="margin-top:10px">
-          This panel is deliberately visible instead of leaving a blank dashboard. It reports the exact Appwrite step that failed.
+          This panel is deliberately visible instead of leaving a blank dashboard. It reports the exact step that failed.
         </div>
       </section>
 
@@ -591,7 +571,7 @@
         </section>
 
         <div id="runtimeMsg" class="msg hidden" style="margin-top:16px"></div>
-        <div class="footer-note">BYD Loan Tracker · Single-page frontend · Appwrite backend</div>
+        <div class="footer-note">BYD Loan Tracker · Single-page frontend · Firebase backend</div>
       </main>
     </div>
   </div>
@@ -655,62 +635,58 @@
     </div>
   </div>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+    import {
+      getFirestore, doc, collection, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
+      writeBatch, runTransaction, onSnapshot, Bytes
+    } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
+
     /* =========================================================
        CONFIGURATION
-       Only these values need Appwrite project information.
-       Never put an Appwrite API key here.
+       The Firebase web config is public by design. Access is enforced by
+       firestore.rules, which only admits emails listed in `members`.
        ========================================================= */
     const CONFIG = {
-      endpoint: "https://syd.cloud.appwrite.io/v1",
-      projectId: "6ab0d3cf00379308f210",
-      projectName: "BYD Sealion 8",
+      firebase: {
+        apiKey: "AIzaSyB6YPHcMUD2V9m3-6uoilSLb-GsaqAHo4Y",
+        authDomain: "byd-loan-tracker.firebaseapp.com",
+        projectId: "byd-loan-tracker",
+        appId: "1:545491787219:web:1dbe6e97b32345a1372326",
+        messagingSenderId: "545491787219"
+      },
 
-      // UI hint only. Appwrite permissions remain the real security boundary.
-      ownerEmail: "ghazanfaryt1@gmail.com",
+      settingsCollection: "settings",
+      settingsDocId: "loan_settings",
+      financierCollection: "financier_payments",
+      friendCollection: "friend_payments",
+      membersCollection: "members",
+      receiptsCollection: "receipts",
 
-      // Keep these exact IDs when creating the Appwrite resources.
-      databaseId: "carloan",
-      settingsTableId: "settings",
-      financierTableId: "financier_payments",
-      friendTableId: "friend_payments",
-      storageBucketId: "payment-receipts",
-
-      // Team you create in Appwrite.
-      teamId: "6ab0d5ee00084d9ebb6b",
+      // Receipts are stored in Firestore as chunks (each doc must stay < 1 MiB).
+      receiptMaxBytes: 10 * 1024 * 1024,
+      receiptChunkBytes: 700 * 1024,
+      receiptTypes: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
 
       // Number of future days to materialize into the schedule.
       scheduleDays: 365
     };
 
-    // ---------- Appwrite setup ----------
-    const {
-      Client, Account, TablesDB, Storage, Teams, Query, ID, Permission, Role
-    } = Appwrite;
+    // ---------- Firebase setup ----------
+    const app = initializeApp(CONFIG.firebase);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    const client = new Client()
-      .setEndpoint(CONFIG.endpoint)
-      .setProject(CONFIG.projectId);
-
-    // Appwrite connectivity check: runs exactly once when this page starts.
-    // This does not require an authenticated user.
-    client.ping()
-      .then(() => console.info("Appwrite connection OK:", {
-        project: CONFIG.projectName,
-        projectId: CONFIG.projectId,
-        endpoint: CONFIG.endpoint
-      }))
-      .catch(err => console.error("Appwrite connection failed:", err));
-
-    const account = new Account(client);
-    const tablesDB = new TablesDB(client);
-    const storage = new Storage(client);
-    const teams = new Teams(client);
+    const settingsRef = () => doc(db, CONFIG.settingsCollection, CONFIG.settingsDocId);
+    const rowRef = (collectionId, id) => doc(db, collectionId, id);
+    const fromSnap = snap => ({...snap.data(), $id: snap.id});
 
     // ---------- State ----------
     let currentUser = null;
-    let currentTeamMembers = [];
-    let ownerUserId = null;
+    let memberNames = {};
     let isOwner = false;
     let settings = null;
     let financierRows = [];
@@ -847,10 +823,11 @@
       }[method] || "—";
     }
 
-    function findUserNameById(userId) {
-      if (!userId) return "—";
-      if (userId === currentUser?.$id) return currentUser?.name || "You";
-      return "Other member";
+    function paidByLabel(paidBy, type) {
+      if (!paidBy) return "—";
+      if (paidBy === currentUser?.email) return "You";
+      if (memberNames[paidBy]) return memberNames[paidBy];
+      return type === "friend_payment" ? "Friend" : "Owner";
     }
 
     function allRows() {
@@ -860,59 +837,26 @@
     }
 
     // ---------- Auth ----------
-    let authMode = "login";
-
-    $("loginTab").addEventListener("click", () => switchAuthMode("login"));
-    $("signupTab").addEventListener("click", () => switchAuthMode("signup"));
-
-    function switchAuthMode(mode) {
-      authMode = mode;
-      $("loginTab").classList.toggle("active", mode === "login");
-      $("signupTab").classList.toggle("active", mode === "signup");
-      $("nameField").style.display = mode === "signup" ? "flex" : "none";
-      $("authSubmit").textContent = mode === "signup" ? "Create account" : "Sign in";
+    $("authSubmit").addEventListener("click", async () => {
       setMsg($("authMsg"), "");
-    }
-
-    $("authForm").addEventListener("submit", async e => {
-      e.preventDefault();
-      setMsg($("authMsg"), "");
-      const email = $("authEmail").value.trim();
-      const password = $("authPassword").value;
-      const name = $("authName").value.trim();
-
       try {
         $("authSubmit").disabled = true;
-        if (authMode === "signup") {
-          await account.create({
-            userId: ID.unique(),
-            email,
-            password,
-            name: name || email.split("@")[0]
-          });
-        }
-
-        try {
-          await account.createEmailPasswordSession({email, password});
-        } catch (loginErr) {
-          if (authMode === "signup") {
-            throw new Error("Account created. Please sign in using the new account.");
-          }
-          throw loginErr;
-        }
-
-        await bootApp();
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({prompt: "select_account"});
+        // onAuthStateChanged boots the app once the popup completes.
+        await signInWithPopup(auth, provider);
       } catch (err) {
-        setMsg($("authMsg"), readableError(err), "error");
+        if (err?.code !== "auth/popup-closed-by-user" && err?.code !== "auth/cancelled-popup-request") {
+          setMsg($("authMsg"), readableError(err), "error");
+        }
       } finally {
         $("authSubmit").disabled = false;
       }
     });
 
     $("logoutBtn").addEventListener("click", async () => {
-      try { await account.deleteSession({sessionId:"current"}); } catch {}
-      unsubscribers.forEach(fn => { try{fn()}catch{} });
-      unsubscribers = [];
+      stopRealtime();
+      try { await signOut(auth); } catch {}
       location.reload();
     });
 
@@ -927,10 +871,10 @@
       hide($("initErrorPanel"));
       try {
         setInitStep("Loading signed-in user…");
-        await loadCurrentUser();
+        loadCurrentUser();
 
-        setInitStep("Checking BYD Loan team membership…");
-        await loadTeam();
+        setInitStep("Checking BYD Loan membership…");
+        await loadMembership();
 
         setInitStep("Loading loan settings…");
         await loadSettings();
@@ -957,143 +901,100 @@
     }
 
     function formatInitError(err) {
-      const code = err?.code ? `Appwrite code: ${err.code}\\n` : "";
-      const type = err?.type ? `Appwrite type: ${err.type}\\n` : "";
-      const msg = err?.message || err?.response?.message || String(err);
-      return `${code}${type}Message: ${msg}\\n\\nUser: ${currentUser?.email || "unknown"}\\nUser ID: ${currentUser?.$id || "unknown"}\\nTeam ID: ${CONFIG.teamId}\\nDatabase ID: ${CONFIG.databaseId}`;
+      const code = err?.code ? `Firebase code: ${err.code}\n` : "";
+      const msg = readableError(err);
+      return `${code}Message: ${msg}\n\nUser: ${currentUser?.email || "unknown"}\nProject: ${CONFIG.firebase.projectId}`;
     }
 
-    async function loadCurrentUser() {
-      currentUser = await account.get();
-      $("userName").textContent = currentUser.name || currentUser.email;
+    function loadCurrentUser() {
+      const user = auth.currentUser;
+      if (!user) throw new Error("Not signed in.");
+      currentUser = {
+        $id: user.uid,
+        email: String(user.email || "").trim().toLowerCase(),
+        name: user.displayName || user.email
+      };
+      $("userName").textContent = currentUser.name;
     }
 
-    async function loadTeam() {
-      if (!CONFIG.teamId || CONFIG.teamId.startsWith("YOUR_")) {
-        throw new Error("Set CONFIG.teamId in index.html first.");
+    async function loadMembership() {
+      // Membership lives in the `members` collection (doc id = email). The
+      // security rules deny every read to non-members, so a permission error
+      // here means this Google account has not been invited.
+      let memberSnap;
+      try {
+        memberSnap = await getDoc(rowRef(CONFIG.membersCollection, currentUser.email));
+      } catch (err) {
+        if (err?.code !== "permission-denied") throw err;
       }
-
-      /*
-       * IMPORTANT:
-       * Appwrite can hide membership userId/userEmail fields when Membership
-       * Privacy is enabled. That is exactly what was happening here: the team
-       * memberships were returned with blank userId/userEmail values even
-       * though the membership was confirmed and its roles were visible.
-       *
-       * Therefore we only use Teams.list() to prove that the signed-in account
-       * belongs to the configured team. We do NOT try to match membership
-       * records by userId/email.
-       *
-       * The ownerEmail below is UI-only. Database/table/file permissions in
-       * Appwrite remain the actual security boundary.
-       */
-      const teamList = await teams.list();
-      const visibleTeams = teamList.teams || [];
-      const team = visibleTeams.find(t => t.$id === CONFIG.teamId);
-
-      if (!team) {
-        const visible = visibleTeams.length
-          ? visibleTeams.map(t => `${t.name} (${t.$id})`).join(", ")
-          : "None";
-
+      if (!memberSnap?.exists()) {
         throw new Error(
-          `This signed-in account is not a member of the configured BYD Loan team.\n` +
-          `Current account: ${currentUser.email} (${currentUser.$id})\n` +
-          `Teams visible to this account: ${visible}\n` +
-          `Expected team: ${CONFIG.teamId}`
+          `This Google account is not a member of the BYD Loan tracker.\n` +
+          `Signed in as: ${currentUser.email}\n` +
+          `Sign out and choose the invited Google account.`
         );
       }
 
-      $("teamMeta").textContent = team.name || CONFIG.teamId.slice(0,8);
-
-      // Load memberships only for display/audit information. Do not use their
-      // userId/userEmail fields because membership privacy may hide them.
-      try {
-        const membershipsResponse = await teams.listMemberships({
-          teamId: CONFIG.teamId
-        });
-        currentTeamMembers = membershipsResponse.memberships || [];
-      } catch (err) {
-        currentTeamMembers = [];
-        console.warn("Could not list team memberships; continuing with team access.", err);
+      const member = memberSnap.data();
+      isOwner = member.role === "owner";
+      if (member.name) {
+        currentUser.name = member.name;
+        $("userName").textContent = member.name;
       }
 
-      isOwner = (
-        String(currentUser.email || "").trim().toLowerCase() ===
-        String(CONFIG.ownerEmail || "").trim().toLowerCase()
-      );
+      const all = await getDocs(collection(db, CONFIG.membersCollection));
+      memberNames = Object.fromEntries(all.docs.map(d => [d.id, d.data().name || d.id]));
 
+      $("teamMeta").textContent = `${all.size} ${all.size === 1 ? "member" : "members"}`;
       $("rolePill").textContent = isOwner ? "Owner" : "Friend";
       $("settingsSection").style.display = isOwner ? "" : "none";
       $("settingsTabBtn").style.display = isOwner ? "" : "none";
       $("headerSubtitle").textContent = isOwner
         ? "Owner · Shared payment dashboard"
         : "Friend · Shared payment dashboard";
-
-      console.info("BYD Loan team access resolved:", {
-        currentUserId: currentUser.$id,
-        currentUserEmail: currentUser.email,
-        teamId: CONFIG.teamId,
-        teamName: team.name,
-        isOwner,
-        membershipCount: currentTeamMembers.length
-      });
     }
 
     async function loadSettings() {
-      try {
-        settings = await tablesDB.getRow({
-          databaseId: CONFIG.databaseId,
-          tableId: CONFIG.settingsTableId,
-          rowId: "loan_settings"
-        });
+      const snap = await getDoc(settingsRef());
+      if (snap.exists()) {
+        settings = fromSnap(snap);
         hide($("setupPanel"));
         show($("dashboard"));
         populateSettingsSummary();
-      } catch (err) {
-        // A missing settings row means the owner has not initialized the loan yet.
-        // Authentication/team/table errors are surfaced separately by bootApp.
-        if (isOwner && (err?.code === 404 || err?.type === "row_not_found")) {
-          show($("setupPanel"));
-          hide($("dashboard"));
-          settings = null;
-          return;
-        }
-        if (isOwner) {
-          // Keep the useful original error; do not silently turn permission/config errors into setup.
-          throw err;
-        }
-        throw new Error("Loan has not been initialized by the owner yet. Ask the owner to initialize the loan first.");
+        return;
       }
+      settings = null;
+      // A missing settings doc means the owner has not initialized the loan yet.
+      if (isOwner) {
+        show($("setupPanel"));
+        hide($("dashboard"));
+        return;
+      }
+      throw new Error("Loan has not been initialized by the owner yet. Ask the owner to initialize the loan first.");
     }
 
     // ---------- Database ----------
-    async function fetchRows(tableId) {
-      const result = await tablesDB.listRows({
-        databaseId: CONFIG.databaseId,
-        tableId,
-        queries: [Query.limit(500)]
-      });
-      return result.rows || [];
+    async function fetchRows(collectionId) {
+      const snap = await getDocs(collection(db, collectionId));
+      return snap.docs.map(fromSnap);
     }
 
     async function refreshAll() {
       if (!settings) return;
       [financierRows, friendRows] = await Promise.all([
-        fetchRows(CONFIG.financierTableId),
-        fetchRows(CONFIG.friendTableId)
+        fetchRows(CONFIG.financierCollection),
+        fetchRows(CONFIG.friendCollection)
       ]);
       renderDashboard();
     }
 
-    async function createOrUpdateSettings(values) {
-      const permissions = [
-        Permission.read(Role.team(CONFIG.teamId)),
-        Permission.update(Role.team(CONFIG.teamId, "owner")),
-        Permission.delete(Role.team(CONFIG.teamId, "owner"))
-      ];
+    async function reloadSettings() {
+      const snap = await getDoc(settingsRef());
+      settings = snap.exists() ? fromSnap(snap) : null;
+    }
 
-      const data = {
+    async function createOrUpdateSettings(values) {
+      await setDoc(settingsRef(), {
         vehicle: values.vehicle,
         funded_cents: values.fundedCents,
         regular_dd_cents: values.regularCents,
@@ -1106,71 +1007,49 @@
         friend_start: values.friendStart,
         cadence_days: values.cadenceDays,
         timezone: values.timezone,
-        team_id: CONFIG.teamId,
-        owner_user_id: currentUser.$id,
+        owner_email: currentUser.email,
         updated_at: new Date().toISOString()
-      };
+      }, {merge: true});
+    }
 
-      try {
-        await tablesDB.getRow({
-          databaseId: CONFIG.databaseId,
-          tableId: CONFIG.settingsTableId,
-          rowId:"loan_settings"
-        });
-
-        await tablesDB.updateRow({
-          databaseId: CONFIG.databaseId,
-          tableId: CONFIG.settingsTableId,
-          rowId:"loan_settings",
-          data
-        });
-      } catch (err) {
-        // Create only when the settings row really does not exist.
-        if (err?.code !== 404) throw err;
-
-        await tablesDB.createRow({
-          databaseId: CONFIG.databaseId,
-          tableId: CONFIG.settingsTableId,
-          rowId:"loan_settings",
-          data,
-          permissions
+    // Creates only the docs that do not exist yet. A plain set() would
+    // overwrite a row the other device just marked as paid, so each batch
+    // re-checks existence inside a transaction.
+    async function createMissing(items) {
+      for (let i = 0; i < items.length; i += 200) {
+        const chunk = items.slice(i, i + 200);
+        await runTransaction(db, async tx => {
+          const refs = chunk.map(item => rowRef(item.collectionId, item.id));
+          const snaps = await Promise.all(refs.map(ref => tx.get(ref)));
+          snaps.forEach((snap, k) => {
+            if (!snap.exists()) tx.set(refs[k], chunk[k].data);
+          });
         });
       }
-    }
-
-    function financierRowPermissions() {
-      return [
-        Permission.read(Role.team(CONFIG.teamId)),
-        Permission.update(Role.team(CONFIG.teamId, "owner")),
-        Permission.delete(Role.team(CONFIG.teamId, "owner"))
-      ];
-    }
-
-    function friendRowPermissions() {
-      return [
-        Permission.read(Role.team(CONFIG.teamId)),
-        Permission.update(Role.team(CONFIG.teamId)),
-        Permission.delete(Role.team(CONFIG.teamId))
-      ];
     }
 
     async function ensureSchedule({quiet=false}={}) {
       if (!settings) return;
       const today = todayKey();
       const until = addDays(today, CONFIG.scheduleDays);
-      const existingFin = new Set(financierRows.map(r => r.$id));
-      const existingFriend = new Set(friendRows.map(r => r.$id));
+      const now = () => new Date().toISOString();
+
+      // Compare against the server, not local state: on boot the local arrays are still empty.
+      const [freshFin, freshFriend] = await Promise.all([
+        isOwner ? fetchRows(CONFIG.financierCollection) : Promise.resolve([]),
+        fetchRows(CONFIG.friendCollection)
+      ]);
+      const existingFin = new Set(freshFin.map(r => r.$id));
+      const existingFriend = new Set(freshFriend.map(r => r.$id));
 
       const creates = [];
 
-      // Initial DD
-      const initialId = `initial-${settings.initial_dd_date}`;
-      if (!existingFin.has(initialId)) {
-        creates.push(tablesDB.createRow({
-          databaseId: CONFIG.databaseId,
-          tableId: CONFIG.financierTableId,
-          rowId: initialId,
-          data: {
+      // Only the owner may write financier rows (see firestore.rules).
+      if (isOwner) {
+        // Initial DD
+        const initialId = `initial-${settings.initial_dd_date}`;
+        if (!existingFin.has(initialId)) {
+          creates.push({collectionId: CONFIG.financierCollection, id: initialId, data: {
             cycle_key: initialId,
             due_date: settings.initial_dd_date,
             type: "initial_direct_debit",
@@ -1180,22 +1059,16 @@
             paid_date: null,
             paid_by: null,
             notes: "Initial direct debit",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          },
-          permissions: financierRowPermissions()
-        }).catch(err => null));
-      }
+            created_at: now(),
+            updated_at: now()
+          }});
+        }
 
-      // Regular DD schedule
-      for (let d = settings.regular_dd_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
-        const rowId = `dd-${d}`;
-        if (!existingFin.has(rowId)) {
-          creates.push(tablesDB.createRow({
-            databaseId: CONFIG.databaseId,
-            tableId: CONFIG.financierTableId,
-            rowId,
-            data: {
+        // Regular DD schedule
+        for (let d = settings.regular_dd_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
+          const rowId = `dd-${d}`;
+          if (!existingFin.has(rowId)) {
+            creates.push({collectionId: CONFIG.financierCollection, id: rowId, data: {
               cycle_key: rowId,
               due_date: d,
               type: "direct_debit",
@@ -1203,34 +1076,27 @@
               status: "scheduled",
               payment_method: "direct_debit",
               notes: "Regular fortnightly direct debit",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            },
-            permissions: financierRowPermissions()
-          }).catch(err => null));
+              created_at: now(),
+              updated_at: now()
+            }});
+          }
         }
-      }
 
-      // Extra payment schedule
-      for (let d = settings.extra_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
-        const rowId = `extra-${d}`;
-        if (!existingFin.has(rowId)) {
-          creates.push(tablesDB.createRow({
-            databaseId: CONFIG.databaseId,
-            tableId: CONFIG.financierTableId,
-            rowId,
-            data: {
+        // Extra payment schedule
+        for (let d = settings.extra_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
+          const rowId = `extra-${d}`;
+          if (!existingFin.has(rowId)) {
+            creates.push({collectionId: CONFIG.financierCollection, id: rowId, data: {
               cycle_key: rowId,
               due_date: d,
               type: "extra_payment",
               amount_cents: settings.extra_cents,
               status: "scheduled",
               notes: "Manual additional payment",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            },
-            permissions: financierRowPermissions()
-          }).catch(err => null));
+              created_at: now(),
+              updated_at: now()
+            }});
+          }
         }
       }
 
@@ -1238,39 +1104,28 @@
       for (let d = settings.friend_start; compareDate(d, until) <= 0; d = addDays(d, settings.cadence_days)) {
         const rowId = `friend-${d}`;
         if (!existingFriend.has(rowId)) {
-          creates.push(tablesDB.createRow({
-            databaseId: CONFIG.databaseId,
-            tableId: CONFIG.friendTableId,
-            rowId,
-            data: {
-              cycle_key: rowId,
-              due_date: d,
-              type: "friend_payment",
-              amount_cents: settings.friend_cents,
-              status: "scheduled",
-              notes: "Incoming payment from friend",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            },
-            permissions: friendRowPermissions()
-          }).catch(err => null));
+          creates.push({collectionId: CONFIG.friendCollection, id: rowId, data: {
+            cycle_key: rowId,
+            due_date: d,
+            type: "friend_payment",
+            amount_cents: settings.friend_cents,
+            status: "scheduled",
+            notes: "Incoming payment from friend",
+            created_at: now(),
+            updated_at: now()
+          }});
         }
       }
 
-      if (creates.length) await Promise.all(creates);
+      if (creates.length) await createMissing(creates);
       if (!quiet) {
         await refreshAll();
         setRuntime("Schedule synced through " + formatDate(until));
       }
     }
 
-    async function updatePayment(row, typeTable, data) {
-      await tablesDB.updateRow({
-        databaseId: CONFIG.databaseId,
-        tableId: typeTable,
-        rowId: row.$id,
-        data: {...data, updated_at:new Date().toISOString()}
-      });
+    async function updatePayment(row, collectionId, data) {
+      await updateDoc(rowRef(collectionId, row.$id), {...data, updated_at:new Date().toISOString()});
     }
 
     // ---------- Rendering ----------
@@ -1372,11 +1227,7 @@
 
     function renderHistoryRow(row) {
       const st = statusForRow(row);
-      const paidBy = row.paid_by
-        ? (row.paid_by === currentUser?.$id
-            ? "You"
-            : (row.type === "friend_payment" ? "Friend" : "Owner"))
-        : "—";
+      const paidBy = paidByLabel(row.paid_by, row.type);
       const proof = row.proof_file_id
         ? `<button class="link-btn" onclick="openReceipt('${escapeHtml(row.proof_file_id)}')">View receipt</button>`
         : "—";
@@ -1460,13 +1311,7 @@
           if (!confirmed) return;
 
           await createOrUpdateSettings(values);
-
-          settings = await tablesDB.getRow({
-            databaseId:CONFIG.databaseId,
-            tableId:CONFIG.settingsTableId,
-            rowId:"loan_settings"
-          });
-
+          await reloadSettings();
           await reconcileFutureSchedule();
           await refreshAll();
           populateSettingsSummary();
@@ -1484,9 +1329,8 @@
       const today = todayKey();
       const until = addDays(today, CONFIG.scheduleDays);
 
-      const freshFinancier = await fetchRows(CONFIG.financierTableId);
-      const freshFriend = await fetchRows(CONFIG.friendTableId);
-
+      const freshFinancier = await fetchRows(CONFIG.financierCollection);
+      const freshFriend = await fetchRows(CONFIG.friendCollection);
       const desiredFin = new Map();
       const desiredFriend = new Map();
 
@@ -1528,73 +1372,49 @@
       }
 
       // Delete obsolete future scheduled rows only. Never delete paid/past history.
-      for (const row of freshFinancier) {
+      const batch = writeBatch(db);
+      const obsolete = [
+        ...freshFinancier.filter(r => !desiredFin.has(r.cycle_key)).map(r => [CONFIG.financierCollection, r]),
+        ...freshFriend.filter(r => !desiredFriend.has(r.cycle_key)).map(r => [CONFIG.friendCollection, r])
+      ];
+      for (const [collectionId, row] of obsolete) {
         if (row.status === "scheduled" && compareDate(row.due_date, today) >= 0) {
-          if (!desiredFin.has(row.cycle_key)) {
-            try {
-              await tablesDB.deleteRow({
-                databaseId:CONFIG.databaseId,
-                tableId:CONFIG.financierTableId,
-                rowId:row.$id
-              });
-            } catch (err) {
-              console.warn("Could not delete obsolete financier schedule row", row.$id, err);
-            }
-          }
+          batch.delete(rowRef(collectionId, row.$id));
         }
       }
 
-      for (const row of freshFriend) {
-        if (row.status === "scheduled" && compareDate(row.due_date, today) >= 0) {
-          if (!desiredFriend.has(row.cycle_key)) {
-            try {
-              await tablesDB.deleteRow({
-                databaseId:CONFIG.databaseId,
-                tableId:CONFIG.friendTableId,
-                rowId:row.$id
-              });
-            } catch (err) {
-              console.warn("Could not delete obsolete friend schedule row", row.$id, err);
-            }
-          }
-        }
-      }
-
-      // Upsert desired future scheduled rows.
+      // Update desired future rows that are still scheduled.
       const existingFinByKey = new Map(freshFinancier.map(r => [r.cycle_key, r]));
       const existingFriendByKey = new Map(freshFriend.map(r => [r.cycle_key, r]));
+      const now = new Date().toISOString();
+      const creates = [];
 
       for (const [key, item] of desiredFin) {
         const existing = existingFinByKey.get(key);
         if (existing) {
           if (existing.status === "scheduled") {
-            await updatePayment(existing, CONFIG.financierTableId, {
+            batch.update(rowRef(CONFIG.financierCollection, existing.$id), {
               due_date:item.due_date,
               amount_cents:item.amount_cents,
               payment_method:item.payment_method,
-              notes:item.notes
+              notes:item.notes,
+              updated_at:now
             });
           }
         } else {
-          await tablesDB.createRow({
-            databaseId:CONFIG.databaseId,
-            tableId:CONFIG.financierTableId,
-            rowId:key,
-            data:{
-              cycle_key:key,
-              due_date:item.due_date,
-              type:item.type,
-              amount_cents:item.amount_cents,
-              status:"scheduled",
-              payment_method:item.payment_method,
-              paid_date:null,
-              paid_by:null,
-              notes:item.notes,
-              created_at:new Date().toISOString(),
-              updated_at:new Date().toISOString()
-            },
-            permissions:financierRowPermissions()
-          });
+          creates.push({collectionId: CONFIG.financierCollection, id: key, data: {
+            cycle_key:key,
+            due_date:item.due_date,
+            type:item.type,
+            amount_cents:item.amount_cents,
+            status:"scheduled",
+            payment_method:item.payment_method,
+            paid_date:null,
+            paid_by:null,
+            notes:item.notes,
+            created_at:now,
+            updated_at:now
+          }});
         }
       }
 
@@ -1602,40 +1422,38 @@
         const existing = existingFriendByKey.get(key);
         if (existing) {
           if (existing.status === "scheduled") {
-            await updatePayment(existing, CONFIG.friendTableId, {
+            batch.update(rowRef(CONFIG.friendCollection, existing.$id), {
               due_date:item.due_date,
               amount_cents:item.amount_cents,
-              notes:item.notes
+              notes:item.notes,
+              updated_at:now
             });
           }
         } else {
-          await tablesDB.createRow({
-            databaseId:CONFIG.databaseId,
-            tableId:CONFIG.friendTableId,
-            rowId:key,
-            data:{
-              cycle_key:key,
-              due_date:item.due_date,
-              type:item.type,
-              amount_cents:item.amount_cents,
-              status:"scheduled",
-              payment_method:null,
-              paid_date:null,
-              paid_by:null,
-              proof_file_id:null,
-              reference:null,
-              notes:item.notes,
-              created_at:new Date().toISOString(),
-              updated_at:new Date().toISOString()
-            },
-            permissions:friendRowPermissions()
-          });
+          creates.push({collectionId: CONFIG.friendCollection, id: key, data: {
+            cycle_key:key,
+            due_date:item.due_date,
+            type:item.type,
+            amount_cents:item.amount_cents,
+            status:"scheduled",
+            payment_method:null,
+            paid_date:null,
+            paid_by:null,
+            proof_file_id:null,
+            reference:null,
+            notes:item.notes,
+            created_at:now,
+            updated_at:now
+          }});
         }
       }
 
+      await batch.commit();
+      await createMissing(creates);
+
       [financierRows, friendRows] = await Promise.all([
-        fetchRows(CONFIG.financierTableId),
-        fetchRows(CONFIG.friendTableId)
+        fetchRows(CONFIG.financierCollection),
+        fetchRows(CONFIG.friendCollection)
       ]);
     }
 
@@ -1666,11 +1484,7 @@
           throw new Error("Complete all required fields.");
         }
         await createOrUpdateSettings(values);
-        settings = await tablesDB.getRow({
-          databaseId:CONFIG.databaseId,
-          tableId:CONFIG.settingsTableId,
-          rowId:"loan_settings"
-        });
+        await reloadSettings();
         await ensureSchedule({quiet:true});
         await refreshAll();
         hide($("setupPanel"));
@@ -1776,13 +1590,8 @@
         let proofFileId = row?.proof_file_id || null;
 
         if (file) {
-          const uploaded = await storage.createFile({
-            bucketId: CONFIG.storageBucketId,
-            fileId: ID.unique(),
-            file,
-            permissions: [Permission.read(Role.team(CONFIG.teamId))]
-          });
-          proofFileId = uploaded.$id;
+          setMsg($("paymentMsg"), "Uploading receipt…");
+          proofFileId = await uploadReceipt(file);
         }
 
         const isDirectDebitType = type === "direct_debit" || type === "initial_direct_debit";
@@ -1790,48 +1599,34 @@
           status:"paid",
           amount_cents: amountCents,
           paid_date:date,
-          paid_by:currentUser.$id,
+          paid_by:currentUser.email,
           payment_method:isDirectDebitType ? "direct_debit" : method,
           reference: reference || null,
           notes: notes || null
         };
 
-        if (type === "friend_payment") data.proof_file_id = proofFileId;
+        if (!isDirectDebitType) data.proof_file_id = proofFileId;
 
+        const collectionId = type === "friend_payment" ? CONFIG.friendCollection : CONFIG.financierCollection;
         if (row) {
-          const tableId = type === "friend_payment" ? CONFIG.friendTableId : CONFIG.financierTableId;
-          // Only the appropriate row can be updated.
-          await updatePayment(row, tableId, data);
+          await updatePayment(row, collectionId, data);
         } else {
-          // For a new friend/extra payment that does not have a matching scheduled row,
-          // create a deterministic record to avoid duplicates.
-          const tableId = type === "friend_payment" ? CONFIG.friendTableId : CONFIG.financierTableId;
-          const rowId = `${type === "friend_payment" ? "friend-paid" : "extra-paid"}-${date}-${currentUser.$id.slice(0,8)}`;
-
-          const permissions = type === "friend_payment"
-            ? friendRowPermissions()
-            : financierRowPermissions();
-
-          await tablesDB.createRow({
-            databaseId:CONFIG.databaseId,
-            tableId,
-            rowId:ID.unique(),
-            data:{
-              cycle_key:rowId,
-              due_date:date,
-              type,
-              amount_cents:amountCents,
-              status:"paid",
-              paid_date:date,
-              paid_by:currentUser.$id,
-              payment_method:method,
-              reference:reference || null,
-              notes:notes || null,
-              proof_file_id: proofFileId,
-              created_at:new Date().toISOString(),
-              updated_at:new Date().toISOString()
-            },
-            permissions
+          // A friend/extra payment with no matching scheduled row gets its own record.
+          const cycleKey = `${type === "friend_payment" ? "friend-paid" : "extra-paid"}-${date}-${currentUser.$id.slice(0,8)}`;
+          await setDoc(doc(collection(db, collectionId)), {
+            cycle_key:cycleKey,
+            due_date:date,
+            type,
+            amount_cents:amountCents,
+            status:"paid",
+            paid_date:date,
+            paid_by:currentUser.email,
+            payment_method:method,
+            reference:reference || null,
+            notes:notes || null,
+            proof_file_id: proofFileId,
+            created_at:new Date().toISOString(),
+            updated_at:new Date().toISOString()
           });
         }
 
@@ -1844,42 +1639,114 @@
     });
 
     // ---------- Receipts ----------
-    window.openReceipt = function(fileId) {
-      const url = storage.getFileView({
-        bucketId:CONFIG.storageBucketId,
-        fileId
+    // Receipts live in Firestore: a `receipts/{id}` metadata doc plus
+    // `receipts/{id}/chunks/{n}` docs holding the bytes. This keeps the
+    // project on the free Spark plan (Cloud Storage requires Blaze).
+    async function compressImage(file) {
+      if (!file.type.startsWith("image/") || file.size <= 1024 * 1024) return file;
+      try {
+        const bitmap = await createImageBitmap(file);
+        const scale = Math.min(1, 2400 / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(bitmap.width * scale);
+        canvas.height = Math.round(bitmap.height * scale);
+        canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.85));
+        if (!blob || blob.size >= file.size) return file;
+        return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", {type: "image/jpeg"});
+      } catch {
+        return file;
+      }
+    }
+
+    async function uploadReceipt(original) {
+      if (!CONFIG.receiptTypes.includes(original.type)) {
+        throw new Error("Receipt must be a JPG, PNG, WEBP or PDF file.");
+      }
+      const file = await compressImage(original);
+      if (file.size > CONFIG.receiptMaxBytes) {
+        throw new Error("Receipt is larger than 10 MB. Please upload a smaller file.");
+      }
+
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      const metaRef = doc(collection(db, CONFIG.receiptsCollection));
+      const chunkCount = Math.ceil(bytes.length / CONFIG.receiptChunkBytes);
+
+      // At most ~5.6 MB per commit keeps each request under Firestore's 10 MiB limit.
+      for (let start = 0; start < chunkCount; start += 8) {
+        const batch = writeBatch(db);
+        for (let n = start; n < Math.min(start + 8, chunkCount); n++) {
+          const part = bytes.subarray(n * CONFIG.receiptChunkBytes, (n + 1) * CONFIG.receiptChunkBytes);
+          batch.set(doc(metaRef, "chunks", String(n)), {data: Bytes.fromUint8Array(part)});
+        }
+        await batch.commit();
+      }
+
+      // Written last, so a metadata doc always means every chunk is present.
+      await setDoc(metaRef, {
+        name: file.name,
+        mime_type: file.type,
+        size: file.size,
+        chunk_count: chunkCount,
+        uploaded_by: currentUser.email,
+        uploaded_at: new Date().toISOString()
       });
-      window.open(url, "_blank", "noopener,noreferrer");
+      return metaRef.id;
+    }
+
+    window.openReceipt = async function(fileId) {
+      // Open the window synchronously so popup blockers allow it.
+      const win = window.open("", "_blank");
+      try {
+        const metaRef = rowRef(CONFIG.receiptsCollection, fileId);
+        const meta = await getDoc(metaRef);
+        if (!meta.exists()) throw new Error("Receipt not found.");
+        const {name, mime_type, chunk_count} = meta.data();
+        const chunks = await Promise.all(
+          Array.from({length: chunk_count}, (_, n) => getDoc(doc(metaRef, "chunks", String(n))))
+        );
+        const blob = new Blob(chunks.map(c => c.data().data.toUint8Array()), {type: mime_type});
+        const url = URL.createObjectURL(blob);
+        if (win) {
+          win.location.href = url;
+        } else {
+          // Popup blocked: download the file instead.
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = name || "receipt";
+          a.click();
+        }
+      } catch (err) {
+        if (win) win.close();
+        setRuntime(readableError(err), true);
+      }
     };
 
     // ---------- Realtime ----------
-    function subscribeRealtime() {
+    function stopRealtime() {
       unsubscribers.forEach(fn => { try{fn()}catch{} });
       unsubscribers = [];
+    }
 
-      const tableIds = [
-        CONFIG.settingsTableId,
-        CONFIG.financierTableId,
-        CONFIG.friendTableId
-      ];
+    function subscribeRealtime() {
+      stopRealtime();
+      const onError = err => console.warn("Realtime subscription failed", err);
 
-      for (const tableId of tableIds) {
-        try {
-          const unsub = client.subscribe(
-            `tablesdb.${CONFIG.databaseId}.tables.${tableId}.rows`,
-            async () => {
-              try {
-                await loadTeam();
-                await loadSettings();
-                if (settings) await refreshAll();
-              } catch {}
-            }
-          );
-          unsubscribers.push(unsub);
-        } catch (err) {
-          console.warn("Realtime subscription failed", err);
-        }
-      }
+      unsubscribers.push(onSnapshot(settingsRef(), snap => {
+        if (!snap.exists()) return;
+        settings = fromSnap(snap);
+        renderDashboard();
+      }, onError));
+
+      unsubscribers.push(onSnapshot(collection(db, CONFIG.financierCollection), snap => {
+        financierRows = snap.docs.map(fromSnap);
+        if (settings) renderDashboard();
+      }, onError));
+
+      unsubscribers.push(onSnapshot(collection(db, CONFIG.friendCollection), snap => {
+        friendRows = snap.docs.map(fromSnap);
+        if (settings) renderDashboard();
+      }, onError));
     }
 
     // ---------- Tabs ----------
@@ -1918,7 +1785,7 @@
 
     $("refreshBtn").addEventListener("click", async () => {
       try {
-        await loadTeam();
+        await loadMembership();
         await loadSettings();
         await ensureSchedule({quiet:true});
         await refreshAll();
@@ -1944,30 +1811,30 @@
     function readableError(err) {
       if (!err) return "Unknown error.";
       if (typeof err === "string") return err;
-      return err.message || err.response?.message || "Request failed.";
+      if (err.code === "permission-denied") {
+        return isOwner
+          ? "Permission denied by Firestore rules."
+          : "Only the owner can change this record.";
+      }
+      if (err.code === "auth/popup-blocked") return "The sign-in popup was blocked. Allow popups for this site and try again.";
+      if (err.code === "auth/unauthorized-domain") return "This domain is not authorized for sign-in in Firebase Authentication settings.";
+      return err.message || "Request failed.";
     }
 
     // ---------- Startup ----------
-    (async function init(){
-      try {
-        if (CONFIG.teamId === "YOUR_TEAM_ID") {
-          setMsg($("authMsg"),
-            "Appwrite is connected. Create the Team in Appwrite, then replace CONFIG.teamId in index.html with that Team ID.",
-            "error"
-          );
-          return;
-        }
-
-        try {
-          await account.get();
-          await bootApp();
-        } catch {
-          // Not signed in; remain on auth screen.
-        }
-      } catch(err) {
-        setMsg($("authMsg"), readableError(err), "error");
+    let booted = false;
+    onAuthStateChanged(auth, async user => {
+      if (!user) {
+        booted = false;
+        stopRealtime();
+        show($("authScreen"));
+        hide($("appScreen"));
+        return;
       }
-    })();
+      if (booted) return;
+      booted = true;
+      await bootApp();
+    });
   </script>
 </body>
 </html>

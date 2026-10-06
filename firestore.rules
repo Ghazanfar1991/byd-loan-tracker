@@ -1,0 +1,62 @@
+rules_version = '2';
+
+// Access is driven by the `members` collection (doc id = lowercase email,
+// fields: name, role = "owner" | "friend"). Members are managed from the
+// Firebase console only; the app can never add or change a member.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function memberPath() {
+      return /databases/$(database)/documents/members/$(request.auth.token.email.lower());
+    }
+
+    function isMember() {
+      return signedIn() && exists(memberPath());
+    }
+
+    function isOwner() {
+      return signedIn() && get(memberPath()).data.role == "owner";
+    }
+
+    match /members/{email} {
+      allow read: if isMember();
+      allow write: if false;
+    }
+
+    // Loan settings and the financier schedule: everyone reads, owner writes.
+    match /settings/{docId} {
+      allow read: if isMember();
+      allow write: if isOwner();
+    }
+
+    match /financier_payments/{docId} {
+      allow read: if isMember();
+      allow write: if isOwner();
+    }
+
+    // Friend payments: both members can log and edit.
+    match /friend_payments/{docId} {
+      allow read, write: if isMember();
+    }
+
+    // Receipts are stored as Firestore documents split into <1 MiB chunks,
+    // so no Cloud Storage bucket (and no Blaze plan) is needed.
+    match /receipts/{fileId} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && request.resource.data.uploaded_by == request.auth.token.email.lower()
+        && request.resource.data.size <= 10 * 1024 * 1024;
+      allow update, delete: if isOwner();
+
+      match /chunks/{chunkId} {
+        allow read: if isMember();
+        allow create: if isMember();
+        allow update, delete: if isOwner();
+      }
+    }
+  }
+}
