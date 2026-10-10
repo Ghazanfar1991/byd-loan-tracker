@@ -162,6 +162,8 @@
     .event-actions .small-btn{flex:1}
     .event-actions .link-btn{margin-right:auto}
     #historyBody .event-actions .small-btn{flex:0 0 auto;min-width:88px}
+    .event.is-tappable{cursor:pointer}
+    @media (hover:hover){.event.is-tappable:hover{background:rgba(255,255,255,.02)}}
     .badge{display:inline-flex;align-items:center;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:4px 8px;border-radius:999px;border:1px solid transparent;white-space:nowrap}
     .badge.green{color:#bff7df;background:rgba(72,213,151,.08);border-color:rgba(72,213,151,.22)}
     .badge.amber{color:#ffe3a1;background:rgba(246,198,91,.08);border-color:rgba(246,198,91,.24)}
@@ -222,6 +224,8 @@
     .sheet-actions{display:grid;gap:8px;margin-top:6px}
 
     /* ---------- Toast ---------- */
+    .toast.success{background:#0d1b14}
+    .toast.error{background:#241319}
     .toast{position:fixed;left:var(--gutter);right:var(--gutter);bottom:calc(var(--nav-h) + var(--safe-b) + 12px);z-index:60;max-width:520px;margin:0 auto;box-shadow:0 12px 40px rgba(0,0,0,.45)}
 
     /* ---------- Small phones ---------- */
@@ -616,7 +620,8 @@
           </div>
         </div>
         <div class="settings-actions">
-          <button type="button" id="cancelPaymentBtn" class="ghost-btn">Cancel</button>
+          <button type="button" id="cancelPaymentBtn" class="ghost-btn">Close</button>
+          <button type="button" id="cancelRowBtn" class="danger-btn hidden">Cancel this payment</button>
           <button type="submit" id="savePaymentBtn" class="primary-btn">Save payment</button>
         </div>
         <div id="paymentMsg" class="msg hidden" style="margin-top:10px"></div>
@@ -801,7 +806,7 @@
         overdue:["Overdue","red"],
         due:["Due","amber"],
         missed:["Missed","red"],
-        skipped:["Skipped","amber"]
+        skipped:["Cancelled","amber"]
       };
       const [label, cls] = map[status] || [status, "blue"];
       return statusBadgeText(cls, label);
@@ -1323,8 +1328,13 @@
       return `<div class="date-chip"><b>${day}</b><span>${escapeHtml(mon)}</span></div>`;
     }
 
-    function rowAction(row, label) {
-      return `<button class="small-btn" onclick="openPaymentModalById('${escapeHtml(row.$id)}','${escapeHtml(row.type)}')">${label}</button>`;
+    function rowAction(row, label, fn="openPaymentModalById") {
+      return `<button class="small-btn" onclick="event.stopPropagation();${fn}('${escapeHtml(row.$id)}','${escapeHtml(row.type)}')">${label}</button>`;
+    }
+
+    // Owner only: cancel a single unpaid extra/friend payment. Direct debits are fixed by the financier.
+    function canCancel(row) {
+      return isOwner && isManual(row) && ["overdue", "due", "scheduled"].includes(statusForRow(row));
     }
 
     function renderEvent(row, offerEarly=false) {
@@ -1342,9 +1352,14 @@
       if (canLog(row) && (st === "overdue" || st === "due")) action = rowAction(row, "Log payment");
       else if (canLog(row) && st === "scheduled" && offerEarly) action = rowAction(row, "Log early");
       else if (manual && st === "paid" && isOwner) action = rowAction(row, "Edit");
+      if (canCancel(row) && (st === "overdue" || st === "due")) action += rowAction(row, "Cancel", "cancelPayment");
+
+      // Tapping any unpaid row you can act on opens it (the sheet also holds "Cancel this payment").
+      const tappable = canLog(row) && st !== "paid";
+      const open = tappable ? ` onclick="openPaymentModalById('${escapeHtml(row.$id)}','${escapeHtml(row.type)}')"` : "";
 
       return `
-        <article class="event${st === "overdue" ? " is-overdue" : st === "due" ? " is-today" : ""}">
+        <article class="event${st === "overdue" ? " is-overdue" : st === "due" ? " is-today" : ""}${tappable ? " is-tappable" : ""}"${open}>
           ${dateChip(row.due_date)}
           <div class="event-main">
             <div class="event-title">${escapeHtml(typeLabel(row.type))}</div>
@@ -1363,8 +1378,9 @@
       const st = statusForRow(row);
       const date = row.paid_date || row.due_date;
       const method = row.type.includes("direct_debit") ? "Automatic" : (row.payment_method ? methodLabel(row.payment_method) : "");
+      const cancelled = st === "skipped";
       const details = [
-        method,
+        cancelled ? `Cancelled${row.cancelled_by ? ` by ${paidByLabel(row.cancelled_by, row.type)}` : ""}` : method,
         row.paid_by ? `by ${paidByLabel(row.paid_by, row.type)}` : "",
         row.paid_date && row.paid_date !== row.due_date ? `due ${formatDate(row.due_date)}` : formatDate(date),
         row.reference ? `ref ${row.reference}` : ""
@@ -1373,7 +1389,9 @@
       const proof = row.proof_file_id
         ? `<button class="link-btn" onclick="openReceipt('${escapeHtml(row.proof_file_id)}')">View receipt</button>`
         : "";
-      const edit = isOwner && isManual(row) ? rowAction(row, "Edit") : "";
+      const edit = !isOwner || !isManual(row) ? ""
+        : cancelled ? rowAction(row, "Restore", "restorePayment")
+        : rowAction(row, "Edit");
 
       return `
         <article class="event">
@@ -1686,11 +1704,59 @@
       $("paymentModalTitle").textContent = isPaid
         ? `Edit ${typeLabel(type).toLowerCase()}`
         : `Log ${typeLabel(type).toLowerCase()}`;
+      $("cancelRowBtn").classList.toggle("hidden", !(isExisting && canCancel(row)));
 
       $("paymentModalSubtitle").textContent = isExisting
         ? `Due ${formatDate(row.due_date)}${isPaid ? " · editing a paid record" : ` · ${relativeDue(row.due_date)}`}`
         : "Record a payment that isn't on the schedule.";
     }
+
+    function findRow(id, type) {
+      return (type === "friend_payment" ? friendRows : financierRows).find(r => r.$id === id) || null;
+    }
+
+    window.cancelPayment = async function(id, type) {
+      const row = findRow(id, type);
+      if (!row || !canCancel(row)) return;
+      const ok = window.confirm(
+        `Cancel the ${typeLabel(row.type).toLowerCase()} of ${money(row.amount_cents)} due ${formatDate(row.due_date)}?\n\n` +
+        `It will stop showing as due or overdue and no reminders will be sent. ` +
+        `Other scheduled payments are not affected. You can restore it from History.`
+      );
+      if (!ok) return;
+      try {
+        await updatePayment(row, row.type === "friend_payment" ? CONFIG.friendCollection : CONFIG.financierCollection, {
+          status: "skipped",
+          cancelled_by: currentUser.email,
+          cancelled_at: new Date().toISOString()
+        });
+        if (currentModalRow?.$id === id) closePaymentModal();
+        await refreshAll();
+        setRuntime(`${typeLabel(row.type)} for ${formatDate(row.due_date)} cancelled.`);
+      } catch (err) {
+        setRuntime(readableError(err), true);
+      }
+    };
+
+    window.restorePayment = async function(id, type) {
+      const row = findRow(id, type);
+      if (!row || !isOwner || row.status !== "skipped") return;
+      try {
+        await updatePayment(row, row.type === "friend_payment" ? CONFIG.friendCollection : CONFIG.financierCollection, {
+          status: "scheduled",
+          cancelled_by: null,
+          cancelled_at: null
+        });
+        await refreshAll();
+        setRuntime(`${typeLabel(row.type)} for ${formatDate(row.due_date)} restored.`);
+      } catch (err) {
+        setRuntime(readableError(err), true);
+      }
+    };
+
+    $("cancelRowBtn").addEventListener("click", () => {
+      if (currentModalRow) window.cancelPayment(currentModalRow.$id, currentModalRow.type);
+    });
 
     window.openPaymentModalById = function(id, type) {
       const list = type === "friend_payment" ? friendRows : financierRows;

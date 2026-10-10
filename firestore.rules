@@ -38,9 +38,18 @@ service cloud.firestore {
       allow write: if isOwner();
     }
 
-    // Friend payments: both members can log and edit.
+    // Friend payments: both members can log and edit, but only the owner may
+    // cancel ("skipped"/"missed"), restore a cancelled row, or delete one.
+    function cancelled(data) {
+      return data.status in ["skipped", "missed"];
+    }
+
     match /friend_payments/{docId} {
-      allow read, write: if isMember();
+      allow read: if isMember();
+      allow create: if isOwner() || (isMember() && !cancelled(request.resource.data));
+      allow update: if isOwner()
+        || (isMember() && !cancelled(resource.data) && !cancelled(request.resource.data));
+      allow delete: if isOwner();
     }
 
     // Web Push subscriptions, one per browser (id = first 40 hex chars of
