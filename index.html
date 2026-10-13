@@ -1413,6 +1413,8 @@
       if (!settings || !isOwner) return;
       $("settingsSummary").innerHTML = `
         <form id="editSettingsForm">
+          <div class="msg" style="margin-bottom:12px"><b>Future payments only.</b> Changes here set the defaults for upcoming scheduled payments (extra, friend, direct debit). Payments already paid, and any past or overdue payments, are never changed. Tap “Edit settings” to make changes; you will be asked to confirm before anything is saved.</div>
+          <fieldset id="editSettingsFields" disabled style="border:0;padding:0;margin:0;min-width:0">
           <div class="settings-grid">
             <div class="field"><label>Vehicle</label><input id="eVehicle" value="${escapeHtml(settings.vehicle)}"></div>
             <div class="field"><label>Funded amount</label><input id="eFunded" type="number" inputmode="decimal" step="0.01" value="${(settings.funded_cents/100).toFixed(2)}"></div>
@@ -1430,11 +1432,22 @@
             <div class="field"><label>Friend amount</label><input id="eFriendAmount" type="number" inputmode="decimal" step="0.01" value="${(settings.friend_cents/100).toFixed(2)}"></div>
             <div class="field"><label>Timezone</label><input id="eTimezone" value="${escapeHtml(settings.timezone)}"></div>
           </div>
+          </fieldset>
           <div class="settings-actions">
-            <button class="primary-btn" type="submit">Save settings</button>
+            <button class="ghost-btn hidden" type="button" id="cancelEditSettings">Cancel</button>
+            <button class="ghost-btn" type="button" id="startEditSettings">Edit settings</button>
+            <button class="primary-btn hidden" type="submit" id="reviewSettingsBtn">Review &amp; save</button>
           </div>
         </form>
       `;
+      const setEditing = on => {
+        $("editSettingsFields").disabled = !on;
+        $("startEditSettings").classList.toggle("hidden", on);
+        $("cancelEditSettings").classList.toggle("hidden", !on);
+        $("reviewSettingsBtn").classList.toggle("hidden", !on);
+      };
+      $("startEditSettings").addEventListener("click", () => setEditing(true));
+      $("cancelEditSettings").addEventListener("click", () => populateSettingsSummary());
 
       $("editSettingsForm").addEventListener("submit", async e => {
         e.preventDefault();
@@ -1459,10 +1472,11 @@
             return;
           }
 
-          const summary = changes.map(([label,before,after]) => `${label}: ${before} → ${after}`).join("\\n");
+          const summary = changes.map(([label,before,after]) => `${label}: ${before} → ${after}`).join("\n");
           const confirmed = window.confirm(
-            `Confirm loan settings change?\\n\\n${summary}\\n\\n` +
-            `Future scheduled items will be reconciled. Existing payment history will not be changed.`
+            `Confirm loan settings change?\n\n${summary}\n\n` +
+            `This applies to FUTURE scheduled payments only (from today onward). ` +
+            `Paid, past and overdue payments will NOT be changed.\n\nSave these changes?`
           );
           if (!confirmed) return;
 
@@ -1548,7 +1562,7 @@
       for (const [key, item] of desiredFin) {
         const existing = existingFinByKey.get(key);
         if (existing) {
-          if (existing.status === "scheduled") {
+          if (existing.status === "scheduled" && compareDate(existing.due_date, today) >= 0) {
             batch.update(rowRef(CONFIG.financierCollection, existing.$id), {
               due_date:item.due_date,
               amount_cents:item.amount_cents,
@@ -1577,7 +1591,7 @@
       for (const [key, item] of desiredFriend) {
         const existing = existingFriendByKey.get(key);
         if (existing) {
-          if (existing.status === "scheduled") {
+          if (existing.status === "scheduled" && compareDate(existing.due_date, today) >= 0) {
             batch.update(rowRef(CONFIG.friendCollection, existing.$id), {
               due_date:item.due_date,
               amount_cents:item.amount_cents,
